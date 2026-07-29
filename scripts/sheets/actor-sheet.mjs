@@ -1,4 +1,5 @@
 import { SKILL_CATALOG, TASK_CATALOG } from "../catalogs/skill-catalog.mjs";
+import { ALPHA_PACKAGES, alphaPackageById } from "../catalogs/equipment-catalog.mjs";
 
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -86,7 +87,15 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       openEffortDialog: AetherchromeActorSheet.#onOpenEffortDialog,
       toggleSkillBranch: AetherchromeActorSheet.#onToggleSkillBranch,
       expandAllSkills: AetherchromeActorSheet.#onExpandAllSkills,
-      collapseAllSkills: AetherchromeActorSheet.#onCollapseAllSkills
+      collapseAllSkills: AetherchromeActorSheet.#onCollapseAllSkills,
+      itemEdit: AetherchromeActorSheet.#onItemEdit,
+      itemDelete: AetherchromeActorSheet.#onItemDelete,
+      itemReadyToggle: AetherchromeActorSheet.#onItemReadyToggle,
+      itemQuantityDecrease: AetherchromeActorSheet.#onItemQuantityDecrease,
+      itemQuantityIncrease: AetherchromeActorSheet.#onItemQuantityIncrease,
+      itemResourceDecrease: AetherchromeActorSheet.#onItemResourceDecrease,
+      itemResourceIncrease: AetherchromeActorSheet.#onItemResourceIncrease,
+      applyEquipmentPackage: AetherchromeActorSheet.#onApplyEquipmentPackage
     }
   };
 
@@ -132,7 +141,38 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       hp: this.#resourceContext("health"),
       mp: this.#resourceContext("magic"),
       openSkillEffortPending: Boolean(this.actor.system.resources.effort?.openSkill),
-      activeDefenseEffortPending: Boolean(this.actor.system.resources.effort?.activeDefense)
+      activeDefenseEffortPending: Boolean(this.actor.system.resources.effort?.activeDefense),
+      equipmentPackages: ALPHA_PACKAGES.map(entry => ({
+        ...entry,
+        selected: entry.id === this.actor.system.equipment?.packageId
+      })),
+      inventory: this.actor.items.map(item => {
+        const quantity = Math.max(0, Number(item.system.quantity ?? 1));
+        const resourceMax = Math.max(0, Number(item.system.resource?.max ?? 0));
+        const resourceValue = Math.max(0, Number(item.system.resource?.value ?? 0));
+        return {
+          id: item.id,
+          name: item.name,
+          img: item.img,
+          type: item.type,
+          typeLabel: item.type.charAt(0).toUpperCase() + item.type.slice(1),
+          registryId: item.system.registryId,
+          quantity,
+          load: Number(item.system.load ?? 0),
+          aggregateLoad: Number(item.system.load ?? 0) * quantity,
+          ready: Boolean(item.system.ready),
+          worn: Boolean(item.system.worn),
+          carryLocation: item.system.wearLocation || item.system.carryLocation || "—",
+          configuration: item.system.configuration || item.system.grip || "—",
+          hasResource: resourceMax > 0,
+          resourceValue,
+          resourceMax,
+          resourceUnit: item.system.resource?.unit || ""
+        };
+      }),
+      totalLoad: this.actor.items.reduce((total, item) => {
+        return total + (Number(item.system.load ?? 0) * Math.max(0, Number(item.system.quantity ?? 1)));
+      }, 0)
     }, { inplace: false });
   }
 
@@ -369,6 +409,121 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     event.preventDefault();
     await this.#setSkillExpansion(new Set());
     this.render();
+  }
+
+  static #embeddedItem(sheet, target) {
+    const itemId = target.dataset.itemId;
+    return itemId ? sheet.actor.items.get(itemId) : null;
+  }
+
+  static async #onItemEdit(event, target) {
+    event.preventDefault();
+    const item = AetherchromeActorSheet.#embeddedItem(this, target);
+    item?.sheet.render(true);
+  }
+
+  static async #onItemDelete(event, target) {
+    event.preventDefault();
+    const item = AetherchromeActorSheet.#embeddedItem(this, target);
+    if (!item) return;
+
+    const confirmed = await DialogV2.confirm({
+      window: {title: "Remove Equipment"},
+      content: `<p>Remove <strong>${foundry.utils.escapeHTML(item.name)}</strong> from ${foundry.utils.escapeHTML(this.actor.name)}?</p>`,
+      yes: {label: "Remove"},
+      no: {label: "Cancel"},
+      modal: true
+    });
+    if (confirmed) await item.delete();
+  }
+
+  static async #onItemReadyToggle(event, target) {
+    event.preventDefault();
+    const item = AetherchromeActorSheet.#embeddedItem(this, target);
+    if (!item) return;
+    await item.update({"system.ready": !Boolean(item.system.ready)});
+  }
+
+  static async #adjustItemQuantity(sheet, target, delta) {
+    const item = AetherchromeActorSheet.#embeddedItem(sheet, target);
+    if (!item) return;
+    const current = Math.max(0, Number(item.system.quantity ?? 1));
+    await item.update({"system.quantity": Math.max(0, current + delta)});
+  }
+
+  static async #onItemQuantityDecrease(event, target) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustItemQuantity(this, target, -1);
+  }
+
+  static async #onItemQuantityIncrease(event, target) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustItemQuantity(this, target, 1);
+  }
+
+  static async #adjustItemResource(sheet, target, delta) {
+    const item = AetherchromeActorSheet.#embeddedItem(sheet, target);
+    if (!item) return;
+    const maximum = Math.max(0, Number(item.system.resource?.max ?? 0));
+    const current = Math.max(0, Number(item.system.resource?.value ?? 0));
+    await item.update({"system.resource.value": Math.max(0, Math.min(maximum, current + delta))});
+  }
+
+  static async #onItemResourceDecrease(event, target) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustItemResource(this, target, -1);
+  }
+
+  static async #onItemResourceIncrease(event, target) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustItemResource(this, target, 1);
+  }
+
+  static async #onApplyEquipmentPackage(event, target) {
+    event.preventDefault();
+    const section = target.closest(".aec-equipment-package");
+    const packageId = section?.querySelector("select")?.value;
+    const packageRecord = alphaPackageById(packageId);
+
+    if (!packageRecord) {
+      ui.notifications.warn("Select an Alpha equipment package first.");
+      return;
+    }
+
+    if (this.actor.system.equipment?.packageId) {
+      ui.notifications.warn("This Actor already has a recorded equipment package.");
+      return;
+    }
+
+    if (this.actor.items.size > 0) {
+      ui.notifications.warn("Remove existing embedded Items before applying an Alpha package.");
+      return;
+    }
+
+    const confirmed = await DialogV2.confirm({
+      window: {title: `Apply ${packageRecord.name} Package`},
+      content: `
+        <p>Apply <strong>${packageRecord.name}</strong> (${packageRecord.role}) to
+        <strong>${foundry.utils.escapeHTML(this.actor.name)}</strong>?</p>
+        <p>This creates ${packageRecord.items.length} embedded Item records and records package
+        <code>${packageRecord.id}</code>.</p>
+      `,
+      yes: {label: "Apply Package"},
+      no: {label: "Cancel"},
+      modal: true
+    });
+    if (!confirmed) return;
+
+    await this.actor.createEmbeddedDocuments(
+      "Item",
+      packageRecord.items.map(item => foundry.utils.deepClone(item))
+    );
+    await this.actor.update({
+      "system.equipment.packageId": packageRecord.id,
+      "system.equipment.currentEncumbrance": ""
+    });
+
+    ui.notifications.info(`${packageRecord.name} equipment package applied.`);
   }
 
   static async #onTaskDetails(event, target) {

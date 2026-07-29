@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.0.9 — 2026-07-29
+
+### Added
+
+- Native Foundry Item document types: Weapon, Armor, Shield, Gear, Ammunition, and Package.
+- Shared Aetherchrome Item data model implementing universal Item identity, Item Rating, quantity, Load, Ready state, carry/wear state, configuration, coverage, resource, and notes fields.
+- Native ItemSheetV2 sheet for all Aetherchrome Item types.
+- Actor Items and Equipment section.
+- Embedded Item editing and removal.
+- Quantity decrement/increment controls.
+- Ready-state toggle.
+- Ammunition and resource decrement/increment controls.
+- Aggregate carried Load calculation.
+- Alpha package selector and one-click package application.
+- Registered Alpha item records required by Sentinel, Shieldbearer, Vanguard, Breaker, and Marksman packages.
+- Actor fields for package ID, shield arm, and current Encumbrance.
+
+### Package safeguards
+
+- An Actor may not apply a second package while a package ID is recorded.
+- Package application is blocked when embedded Items already exist.
+- Package contents begin with the campaign-established worn, carried, Ready, and ammunition states.
+- Package application creates native embedded Item documents rather than static sheet rows.
+
+### Deferred
+
+- Automated Encumbrance thresholds and Status application.
+- Attack, Aim, Damage Pool, Armor, Shield Block, and ammunition-consumption automation.
+- World compendium generation and registry synchronization.
+- Item modifiers, material composition automation, and construction calculations.
+
 ## 0.0.8 — 2026-07-29
 
 ### Added

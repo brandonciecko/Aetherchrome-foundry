@@ -1,0 +1,117 @@
+<form class="{{cssClass}} aec-item-form" autocomplete="off">
+  <header class="aec-sheet-header">
+    <img src="{{item.img}}" data-edit="img" alt="{{item.name}}">
+    <div class="aec-identity">
+      <label>
+        <span>Name</span>
+        <input name="name" type="text" value="{{item.name}}" {{disabled (not editable)}}>
+      </label>
+      <div class="aec-item-type">{{typeLabel}}</div>
+    </div>
+  </header>
+
+  <section class="aec-panel">
+    <div class="aec-item-grid">
+      <label><span>Registry ID</span>
+        <input name="system.registryId" type="text" value="{{system.registryId}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Record Version</span>
+        <input name="system.recordVersion" type="text" value="{{system.recordVersion}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Record Status</span>
+        <input name="system.recordStatus" type="text" value="{{system.recordStatus}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Primary Category</span>
+        <input name="system.primaryCategory" type="text" value="{{system.primaryCategory}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Tags</span>
+        <input name="system.tags" type="text" value="{{system.tags}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Item Rating</span>
+        <input name="system.itemRating" type="number" value="{{system.itemRating}}" step="1" {{disabled (not editable)}}>
+      </label>
+      <label><span>Quantity</span>
+        <input name="system.quantity" type="number" value="{{system.quantity}}" min="0" step="1" {{disabled (not editable)}}>
+      </label>
+      <label><span>Load per unit</span>
+        <input name="system.load" type="number" value="{{system.load}}" min="0" step="0.05" {{disabled (not editable)}}>
+      </label>
+    </div>
+  </section>
+
+  <section class="aec-panel">
+    <h2>Carry and Ready State</h2>
+    <div class="aec-item-grid">
+      <label class="aec-checkbox-row">
+        <input name="system.ready" type="checkbox" {{checked system.ready}} {{disabled (not editable)}}>
+        <span>Ready</span>
+      </label>
+      <label class="aec-checkbox-row">
+        <input name="system.worn" type="checkbox" {{checked system.worn}} {{disabled (not editable)}}>
+        <span>Worn</span>
+      </label>
+      <label><span>Carry location</span>
+        <input name="system.carryLocation" type="text" value="{{system.carryLocation}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Wear location</span>
+        <input name="system.wearLocation" type="text" value="{{system.wearLocation}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Grip / mounting</span>
+        <input name="system.grip" type="text" value="{{system.grip}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Configuration</span>
+        <input name="system.configuration" type="text" value="{{system.configuration}}" {{disabled (not editable)}}>
+      </label>
+      <label class="aec-grid-wide"><span>Coverage</span>
+        <input name="system.coverage" type="text" value="{{system.coverage}}" {{disabled (not editable)}}>
+      </label>
+    </div>
+  </section>
+
+  {{#if hasResource}}
+  <section class="aec-panel">
+    <h2>Resource</h2>
+    <div class="aec-item-grid">
+      <label><span>Current</span>
+        <input name="system.resource.value" type="number" value="{{system.resource.value}}" min="0" step="1" {{disabled (not editable)}}>
+      </label>
+      <label><span>Capacity</span>
+        <input name="system.resource.max" type="number" value="{{system.resource.max}}" min="0" step="1" {{disabled (not editable)}}>
+      </label>
+      <label><span>Unit</span>
+        <input name="system.resource.unit" type="text" value="{{system.resource.unit}}" {{disabled (not editable)}}>
+      </label>
+    </div>
+  </section>
+  {{/if}}
+
+  {{#if isPackage}}
+  <section class="aec-panel">
+    <h2>Package Record</h2>
+    <div class="aec-item-grid">
+      <label><span>Package ID</span>
+        <input name="system.packageId" type="text" value="{{system.packageId}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Combat role</span>
+        <input name="system.packageRole" type="text" value="{{system.packageRole}}" {{disabled (not editable)}}>
+      </label>
+    </div>
+  </section>
+  {{/if}}
+
+  <section class="aec-panel">
+    <h2>Description</h2>
+    <textarea name="system.description" {{disabled (not editable)}}>{{system.description}}</textarea>
+  </section>
+
+  <section class="aec-panel">
+    <h2>Notes and Procedures</h2>
+    <textarea name="system.notes" {{disabled (not editable)}}>{{system.notes}}</textarea>
+  </section>
+
+  {{#if editable}}
+  <footer class="aec-sheet-footer">
+    <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Item</button>
+  </footer>
+  {{/if}}
+</form>

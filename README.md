@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.8 — Resource Controls, Effort, and Roll Modes
+## Version 0.0.9 — Items and Equipment Foundation
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -81,3 +81,21 @@ recorded as pending until Active Defense automation is implemented.
 Skill Pool messages attach the evaluated Foundry Roll and honor the current
 core Roll Mode. Skill Trees start fully collapsed for users without saved
 expansion state.
+
+
+## v0.0.9 Items and Equipment
+
+Aetherchrome now provides native Foundry Item documents for weapons, armor,
+shields, gear, ammunition, and package records. Items can be created in the
+Items directory, dragged onto Actors, edited as embedded documents, marked
+Ready, assigned carry or wear locations, and tracked for quantity, Load, and
+resources.
+
+The Actor sheet includes the five approved Alpha 0.1 equipment packages.
+Applying a package creates the package's registered Item documents and records
+the package ID. Package application is intentionally restricted to Actors with
+no existing embedded Items and no recorded package.
+
+This release establishes the data and interface foundation. It does not yet
+automate attack resolution, Damage Pools, Armor, Shield Block, Encumbrance
+Statuses, or ammunition consumption.

@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome",
-  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.8 adds derived HP/MP, resource controls, Effort spending, threshold states, collapsed Skill Trees, and roll-mode-aware Skill Pool chat messages.",
-  "version": "0.0.8",
+  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.9 adds native Item documents, Item sheets, Actor inventory management, Load tracking, Ready state, ammunition/resource tracking, and Alpha equipment-package application.",
+  "version": "0.0.9",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -31,7 +31,14 @@
     "Actor": {
       "actor": {}
     },
-    "Item": {}
+    "Item": {
+      "weapon": {},
+      "armor": {},
+      "shield": {},
+      "gear": {},
+      "ammunition": {},
+      "package": {}
+    }
   },
   "initiative": "1d10",
   "grid": {
@@ -42,7 +49,7 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.8/aetherchrome-v0.0.8.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.9/aetherchrome-v0.0.9.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md"

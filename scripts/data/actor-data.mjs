@@ -56,6 +56,11 @@ export class AetherchromeActorData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       concept: new fields.StringField({required: true, nullable: false, initial: ""}),
+      equipment: new fields.SchemaField({
+        packageId: new fields.StringField({required: true, nullable: false, initial: ""}),
+        shieldArm: new fields.StringField({required: true, nullable: false, initial: ""}),
+        currentEncumbrance: new fields.StringField({required: true, nullable: false, initial: ""})
+      }),
       attributes: new fields.SchemaField(
         Object.fromEntries(ATTRIBUTE_KEYS.map(key => [key, attributeField()]))
       ),

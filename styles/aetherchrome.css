@@ -528,3 +528,161 @@
   display: grid;
   gap: 0.25rem;
 }
+
+
+/* v0.0.9: Item sheets and Actor inventory */
+
+.aec-item-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.aec-item-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.aec-item-grid label {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.aec-item-grid label > span,
+.aec-equipment-package label > span {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.aec-grid-wide {
+  grid-column: 1 / -1;
+}
+
+.aec-checkbox-row {
+  grid-template-columns: auto 1fr !important;
+  align-items: center;
+}
+
+.aec-item-type {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--color-border-light-secondary);
+  font-weight: 700;
+}
+
+.aec-equipment-package {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) auto 1fr 1fr 1fr;
+  gap: 0.55rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+.aec-equipment-package label {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.aec-equipment-package button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.aec-inventory-header,
+.aec-inventory-row {
+  display: grid;
+  grid-template-columns: minmax(190px, 2fr) 110px 60px 90px minmax(120px, 1fr) minmax(150px, 1.4fr) 70px;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.aec-inventory-header {
+  padding: 0.35rem 0.45rem;
+  border-bottom: 2px solid var(--color-border-light-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.aec-inventory-row {
+  padding: 0.45rem;
+  border-bottom: 1px solid var(--color-border-light-secondary);
+}
+
+.aec-inventory-name {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.aec-inventory-name img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 1px solid var(--color-border-light-secondary);
+}
+
+.aec-inventory-name span,
+.aec-inventory-row > span {
+  display: grid;
+}
+
+.aec-inventory-name small,
+.aec-inventory-row small {
+  font-size: 0.68rem;
+  opacity: 0.7;
+}
+
+.aec-inline-stepper {
+  display: grid;
+  grid-template-columns: 28px minmax(34px, 1fr) 28px;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.aec-inline-stepper button,
+.aec-inventory-controls button {
+  min-width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0.15rem;
+}
+
+.aec-inline-stepper output {
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.aec-ready-toggle {
+  margin: 0;
+  padding: 0.25rem;
+  font-size: 0.72rem;
+}
+
+.aec-ready-toggle.is-ready {
+  font-weight: 700;
+  outline: 1px solid currentColor;
+}
+
+.aec-inventory-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.aec-empty-inventory {
+  margin: 0.75rem 0;
+  opacity: 0.75;
+}
+
+@media (max-width: 900px) {
+  .aec-equipment-package {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .aec-inventory-header {
+    display: none;
+  }
+
+  .aec-inventory-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

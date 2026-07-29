@@ -148,6 +148,119 @@
     </div>
   </section>
 
+  <section class="aec-panel aec-equipment">
+    <div class="aec-section-heading">
+      <div>
+        <h2>Items and Equipment</h2>
+        <span>Total carried Load: <strong>{{totalLoad}}</strong></span>
+      </div>
+    </div>
+
+    <div class="aec-equipment-package">
+      <label>
+        <span>Alpha Equipment Package</span>
+        <select {{disabled (not editable)}}>
+          <option value="">Select Package…</option>
+          {{#each equipmentPackages as |package|}}
+          <option value="{{package.id}}" {{#if package.selected}}selected{{/if}}>
+            {{package.name}} — {{package.role}} (Load {{package.totalLoad}})
+          </option>
+          {{/each}}
+        </select>
+      </label>
+      <button type="button" data-action="applyEquipmentPackage" {{disabled (not editable)}}>
+        Apply Package
+      </button>
+      <label>
+        <span>Recorded Package ID</span>
+        <input name="system.equipment.packageId" type="text" value="{{system.equipment.packageId}}" readonly>
+      </label>
+      <label>
+        <span>Shield Arm</span>
+        <input name="system.equipment.shieldArm" type="text" value="{{system.equipment.shieldArm}}" {{disabled (not editable)}}>
+      </label>
+      <label>
+        <span>Current Encumbrance</span>
+        <input name="system.equipment.currentEncumbrance" type="text" value="{{system.equipment.currentEncumbrance}}" {{disabled (not editable)}}>
+      </label>
+    </div>
+
+    <div class="aec-inventory-header">
+      <span>Item</span>
+      <span>Qty</span>
+      <span>Load</span>
+      <span>Ready</span>
+      <span>Carry / Wear</span>
+      <span>Resource</span>
+      <span>Controls</span>
+    </div>
+
+    <div class="aec-inventory-list">
+      {{#each inventory as |item|}}
+      <div class="aec-inventory-row">
+        <div class="aec-inventory-name">
+          <img src="{{item.img}}" alt="">
+          <span>
+            <strong>{{item.name}}</strong>
+            <small>{{item.typeLabel}}{{#if item.registryId}} · {{item.registryId}}{{/if}}</small>
+          </span>
+        </div>
+
+        <div class="aec-inline-stepper">
+          <button type="button" data-action="itemQuantityDecrease" data-item-id="{{item.id}}" {{disabled (not ../editable)}}>
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <output>{{item.quantity}}</output>
+          <button type="button" data-action="itemQuantityIncrease" data-item-id="{{item.id}}" {{disabled (not ../editable)}}>
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+
+        <span>{{item.aggregateLoad}}</span>
+
+        <button
+          type="button"
+          class="aec-ready-toggle{{#if item.ready}} is-ready{{/if}}"
+          data-action="itemReadyToggle"
+          data-item-id="{{item.id}}"
+          {{disabled (not ../editable)}}>
+          {{#if item.ready}}Ready{{else}}Not Ready{{/if}}
+        </button>
+
+        <span>
+          {{item.carryLocation}}
+          {{#if item.configuration}}<small>{{item.configuration}}</small>{{/if}}
+        </span>
+
+        {{#if item.hasResource}}
+        <div class="aec-inline-stepper">
+          <button type="button" data-action="itemResourceDecrease" data-item-id="{{item.id}}" {{disabled (not ../editable)}}>
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <output>{{item.resourceValue}} / {{item.resourceMax}} {{item.resourceUnit}}</output>
+          <button type="button" data-action="itemResourceIncrease" data-item-id="{{item.id}}" {{disabled (not ../editable)}}>
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+        {{else}}
+        <span>—</span>
+        {{/if}}
+
+        <div class="aec-inventory-controls">
+          <button type="button" data-action="itemEdit" data-item-id="{{item.id}}" title="Edit Item">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button type="button" data-action="itemDelete" data-item-id="{{item.id}}" title="Remove Item" {{disabled (not ../editable)}}>
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      {{else}}
+      <p class="aec-empty-inventory">No embedded equipment. Drag Items onto the Actor or apply an Alpha package.</p>
+      {{/each}}
+    </div>
+  </section>
+
   <section class="aec-panel aec-compact-panel">
     <h2>{{localize "AETHERCHROME.Diagnostics"}}</h2>
     <button type="button" data-action="diagnosticRoll"><i class="fa-solid fa-dice-d10"></i> {{localize "AETHERCHROME.RollDiagnostic"}}</button>
