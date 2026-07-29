@@ -1,8 +1,0 @@
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-node_modules/
-npm-debug.log*
-dist/
-*.zip
