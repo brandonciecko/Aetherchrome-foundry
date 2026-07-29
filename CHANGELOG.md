@@ -1,37 +1,34 @@
 # Changelog
 
-## 0.0.3 — 2026-07-29
+## 0.0.4 — 2026-07-29
 
 ### Added
 
-- Registered Alpha Skill tree.
-- Parent/child/Specialization presentation.
-- Per-Skill rating records.
-- Skill-filtered Task dropdowns.
-- Typical Attribute labels for Tasks.
-- Separate versioned Skill catalog module.
-
-### Removed
-
-- Twelve generic free-text Skill slots.
-- Skill `Use` checkboxes.
-
-### Excluded
-
-- Superseded and Deprecated registry records.
+- Task Details / Roll controls.
+- Core Skill Pool dialog.
+- Governing Current Attribute selection.
+- Effective Skill modifier and Difficulty inputs.
+- Chance Die procedure.
+- Success, Margin, and Critical Success evaluation.
+- Structured roll chat cards.
+- Automatic and Chained Task safeguards.
 
 ### Not yet implemented
 
-- Skill Pool resolution.
-- Task detail and requirements display.
-- Defaults and prerequisite enforcement.
-- Parent-rating limits.
-- Registry live synchronization.
+- Overflow Dice.
+- Opposed and Cooperative Test automation.
+- Task requirements enforcement.
+- Aim, damage, Pressure, Reactions, and Task-specific effects.
+- Parent Skill prerequisites and rating validation.
+
+## 0.0.3 — 2026-07-29
+
+- Added registered Skill Tree and Task selection.
 
 ## 0.0.2 — 2026-07-29
 
-- Added the six Attributes and generic structured Skill slots.
+- Added Core Actor Record.
 
 ## 0.0.1 — 2026-07-29
 
-- Added the Foundry v14 loadable skeleton.
+- Added Foundry v14 loadable skeleton.

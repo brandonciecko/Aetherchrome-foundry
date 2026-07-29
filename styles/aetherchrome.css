@@ -218,3 +218,136 @@
   padding: 0.45rem 0;
   background: var(--background);
 }
+
+.aec-task-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 0.35rem;
+}
+
+.aec-task-control button {
+  margin: 0;
+  padding: 0;
+}
+
+.aec-task-dialog header,
+.aec-chat-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+  border-bottom: 1px solid var(--color-border-light-secondary);
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.5rem;
+}
+
+.aec-task-dialog h2,
+.aec-chat-card h3 {
+  margin: 0;
+}
+
+.aec-task-dialog header p {
+  margin: 0.15rem 0 0;
+  opacity: 0.75;
+}
+
+.aec-task-status {
+  border: 1px solid var(--color-border-light-secondary);
+  border-radius: 3px;
+  padding: 0.2rem 0.4rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+.aec-task-dialog dl {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.aec-task-dialog dl > div {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 0.6rem;
+}
+
+.aec-task-dialog dt {
+  font-weight: 700;
+}
+
+.aec-task-dialog dd {
+  margin: 0;
+}
+
+.aec-roll-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.aec-roll-fields label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.aec-roll-notes {
+  grid-column: 1 / -1;
+}
+
+.aec-dialog-note,
+.aec-dialog-warning {
+  margin-top: 0.7rem;
+  padding: 0.55rem;
+  border-left: 3px solid var(--color-border-highlight);
+  font-size: 0.85rem;
+}
+
+.aec-chat-card {
+  padding: 0.35rem;
+}
+
+.aec-chat-result {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.aec-chat-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.8rem;
+}
+
+.aec-chat-grid span {
+  opacity: 0.8;
+}
+
+.aec-dice-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.65rem;
+}
+
+.aec-result-die {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border-light-secondary);
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.aec-die-success {
+  outline: 2px solid rgba(100, 180, 100, 0.55);
+}
+
+.aec-die-failure {
+  opacity: 0.62;
+}
+
+.aec-chance-note,
+.aec-roll-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.82rem;
+}

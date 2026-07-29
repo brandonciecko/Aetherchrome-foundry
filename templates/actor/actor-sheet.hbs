@@ -60,14 +60,23 @@
           aria-label="{{skill.name}} rating"
           {{disabled (not ../editable)}}>
         {{#if skill.hasTasks}}
-        <select name="system.skillTree.{{skill.key}}.selectedTask" {{disabled (not ../editable)}}>
-          <option value="">{{localize "AETHERCHROME.SelectTask"}}</option>
-          {{#each skill.tasks as |task|}}
-          <option value="{{task.id}}" {{#if task.selected}}selected{{/if}}>
-            {{task.name}} [{{task.typicalAttribute}}]
-          </option>
-          {{/each}}
-        </select>
+        <div class="aec-task-control">
+          <select name="system.skillTree.{{skill.key}}.selectedTask" {{disabled (not ../editable)}}>
+            <option value="">{{localize "AETHERCHROME.SelectTask"}}</option>
+            {{#each skill.tasks as |task|}}
+            <option value="{{task.id}}" {{#if task.selected}}selected{{/if}}>
+              {{task.name}} [{{task.typicalAttribute}}]
+            </option>
+            {{/each}}
+          </select>
+          <button
+            type="button"
+            data-action="taskDetails"
+            data-skill-id="{{skill.id}}"
+            title="{{localize "AETHERCHROME.TaskDetailsRoll"}}">
+            <i class="fa-solid fa-dice-d10"></i>
+          </button>
+        </div>
         {{else}}
         <span class="aec-no-tasks">{{localize "AETHERCHROME.NoRegisteredTasks"}}</span>
         {{/if}}

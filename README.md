@@ -1,30 +1,40 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.3 — Skill Tree and Task Selection
+## Version 0.0.4 — Task Details and Skill Pool Roll Dialog
 
-This Foundry VTT v14 milestone replaces generic Skill slots with the current registered Alpha Skill topology.
+This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
 ### Added
 
-- Hierarchical Skill tree generated from a separate catalog file.
-- Root Skills, child Skills, and Specializations.
-- Base Skill ratings from 0–10 on every registered node.
-- Task dropdowns filtered to the selected Skill node.
-- Typical Task Attribute shown in each dropdown entry.
-- Current Active Working and Provisional Task records.
-- Superseded and Deprecated Skills and Tasks excluded.
-- Non-overlapping sheet footer.
+- Task Details / Roll button beside each registered Task selection.
+- Task status, typical Attribute, resolution type, Difficulty guidance, time, requirements, and Tags.
+- Governing Current Attribute selection for Tasks with valid alternatives.
+- Net Effective Skill modifier input.
+- Editable Difficulty input.
+- Standard Skill Pool rolls.
+- Chance Die rolls at Effective Skill 0.
+- Success counting against Current Attribute.
+- Success, Failure, Margin, and Critical Success results.
+- Structured chat cards with individual die results.
+- Automatic Task notices.
+- Chained Task notices that prevent incorrect independent rolls.
 
-### Data source
+### Implemented core rules
 
-The catalog was transcribed from `AEC — Skill Registry v0.1` on 2026-07-29. The project registry remains the controlling authority. The included catalog is a versioned snapshot and does not live-sync with Google Sheets.
+- Effective Skill = Base Skill plus the complete net pre-roll modifier, minimum 0.
+- Roll Effective Skill d10.
+- Each normal die at or below Current Attribute produces one success.
+- Success requires successes equal to or greater than Difficulty.
+- At Effective Skill 0, roll one Chance Die.
+- Chance Die threshold is 1 for Attribute 1–3, 2 for 4–6, and 3 for 7–9.
+- Critical Success requires at least twice Difficulty; Difficulty 0 has no universal Critical Success.
 
-### Deliberately omitted
+### Current boundaries
 
-- Skill Pool rolls.
-- Task detail dialogs.
-- Difficulty evaluation.
-- Requirements and item eligibility.
-- Defaults, prerequisites, and parent-rating validation.
-- Chained Task composition.
-- Registry synchronization.
+- Standard Attributes only; Overflow Dice are not yet implemented.
+- Contextual and opposed Difficulty must be entered by the user.
+- Cooperative and opposed-test procedures are not automated.
+- Automatic Tasks display details but do not roll.
+- Chained Tasks display details but do not roll independently.
+- Requirements are displayed but not mechanically enforced.
+- Damage, Aim, Reactions, Pressure, and Task-specific effects are not automated.

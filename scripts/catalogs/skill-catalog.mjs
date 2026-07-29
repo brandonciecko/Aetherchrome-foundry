@@ -196,391 +196,783 @@ export const TASK_CATALOG = [
     "name": "Keep Nerve",
     "skillId": "SKL-FIGHT",
     "typicalAttribute": "HLT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Immediate",
+    "requirements": "Immediate violence or escalation",
+    "tags": "Resist",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FIGHT-RECOGNIZE-VIOLENCE",
     "name": "Recognize Violence",
     "skillId": "SKL-FIGHT",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Immediate or observational",
+    "requirements": "Potential or developing hostile action",
+    "tags": "Assess",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FIGHT-UNARMED-ATTACK",
     "name": "Unarmed Attack",
     "skillId": "SKL-FIGHT",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Target within unarmed Reach",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FIGHT-IMPROVISED-AGGRESSION",
     "name": "Improvised Aggression",
     "skillId": "SKL-FIGHT",
     "typicalAttribute": "AGL/STR",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Opposed",
+    "difficulty": "Contextual",
+    "time": "Combat action",
+    "requirements": "A crude physical attack without applied technique",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FIGHT-SHOVE",
     "name": "Fight Shove",
     "skillId": "SKL-FIGHT",
     "typicalAttribute": "STR/AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Opposed",
+    "difficulty": "Contextual",
+    "time": "Combat action or Reflexive Collision action",
+    "requirements": "Target within immediate reach",
+    "tags": "Attack; Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FIGHT-CALLED-SHOT",
     "name": "Called Shot",
     "skillId": "SKL-FIGHT",
     "typicalAttribute": "Base Attack",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Chained",
+    "difficulty": "Use base Attack",
+    "time": "Declared with a base Attack",
+    "requirements": "A legal named hit location and legal base Attack",
+    "tags": "Chained",
+    "defaultDifficulty": 1,
+    "rollMode": "chained"
   },
   {
     "id": "TASK-MELEE-BASIC-ATTACK",
     "name": "Basic Melee Attack",
     "skillId": "SKL-MELEE",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Target in close-combat Reach; no narrower purchased Skill used",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-MELEE-BASIC-PARRY",
     "name": "Basic Parry",
     "skillId": "SKL-MELEE",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "Reaction",
+    "requirements": "Aware of Attack and Ready item permitted to Parry",
+    "tags": "Reaction",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-MELEE-IMPROVISED-BLOCK",
     "name": "Improvised Block",
     "skillId": "SKL-MELEE",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Opposed",
+    "difficulty": "Contextual",
+    "time": "Reaction or defensive action",
+    "requirements": "Aware of Attack and suitable interposing object",
+    "tags": "Reaction",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-MELEE-SHOVE",
     "name": "Shove",
     "skillId": "SKL-MELEE",
     "typicalAttribute": "STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Target within immediate Reach",
+    "tags": "Attack; Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-MELEE-HEAVY-BLOW",
     "name": "Heavy Blow",
     "skillId": "SKL-MELEE",
     "typicalAttribute": "STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Chained",
+    "difficulty": "Use base Attack",
+    "time": "Declared with a base Attack",
+    "requirements": "Eligible melee Attack with Ready melee weapon",
+    "tags": "Chained",
+    "defaultDifficulty": 1,
+    "rollMode": "chained"
   },
   {
     "id": "TASK-SWORDS-ATTACK",
     "name": "Sword Attack",
     "skillId": "SKL-SWORDS",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready sword and target within Reach",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SWORDS-ATTACK-FORCEFUL-LIGHT",
     "name": "Forceful Light-Sword Attack",
     "skillId": "SKL-SWORDS",
     "typicalAttribute": "STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready Light sword and target within Reach",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SWORDS-PARRY",
     "name": "Sword Parry",
     "skillId": "SKL-SWORDS",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "Reaction",
+    "requirements": "Aware of Attack and Ready sword capable of interception",
+    "tags": "Reaction",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SWORDS-READY",
     "name": "Ready Sword",
     "skillId": "SKL-SWORDS",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "One Task",
+    "requirements": "Control the sword and have valid available hand or hands",
+    "tags": "Prepare",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-KNIVES-ATTACK-QUICK",
     "name": "Quick Knife Attack",
     "skillId": "SKL-KNIVES",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready item permitted for Knives and target within Reach",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-KNIVES-ATTACK-FORCEFUL",
     "name": "Forceful Knife Attack",
     "skillId": "SKL-KNIVES",
     "typicalAttribute": "STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready Light item permitted for Knives and target within Reach",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-KNIVES-PARRY",
     "name": "Knife Parry",
     "skillId": "SKL-KNIVES",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "Reaction",
+    "requirements": "Aware of Attack and Ready Knives item with Parry",
+    "tags": "Reaction",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-KNIVES-READY",
     "name": "Ready Knife",
     "skillId": "SKL-KNIVES",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "One Task",
+    "requirements": "Control eligible item and have a valid available hand",
+    "tags": "Prepare",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SHIELD-PRESENT",
     "name": "Present Shield",
     "skillId": "SKL-SHIELD",
     "typicalAttribute": "AGL/STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "One Task",
+    "requirements": "Control a properly worn or held shield",
+    "tags": "Prepare",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SHIELD-MAINTAIN-CONTROL",
     "name": "Maintain Shield Control",
     "skillId": "SKL-SHIELD",
     "typicalAttribute": "STR/HLT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Immediate or relevant interval",
+    "requirements": "Shield is struck, displaced, trapped, or under sustained force",
+    "tags": "Resist",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SHIELD-BLOCK-SELF",
     "name": "Shield Block",
     "skillId": "SKL-SHIELD",
     "typicalAttribute": "STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "Reaction",
+    "requirements": "Aware of threat and wield a Ready shield",
+    "tags": "Reaction",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SHIELD-COVER-SUBJECT",
     "name": "Cover Subject",
     "skillId": "SKL-SHIELD",
     "typicalAttribute": "AGL/INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Opposed or Fixed",
+    "difficulty": "Contextual",
+    "time": "Reaction",
+    "requirements": "Aware of threat, wield shield, protectable subject in plausible coverage",
+    "tags": "Reaction",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-SHIELD-COVER-AREA",
     "name": "Cover Area",
     "skillId": "SKL-SHIELD",
     "typicalAttribute": "AGL/INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Reaction or sustained action",
+    "requirements": "Wield shield and have a physically plausible area to protect",
+    "tags": "Reaction",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-RANGED-RELOAD",
     "name": "Reload",
     "skillId": "SKL-RANGED",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "One Task",
+    "requirements": "Control weapon, compatible ammunition, required hands and capacity",
+    "tags": "Prepare",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-THROWN-THROW-WEAPON",
     "name": "Throw Weapon",
     "skillId": "SKL-THROWN",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready permitted item, legal target in range, viable trajectory",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-THROWN-THROW-KNIFE",
     "name": "Throw Knife",
     "skillId": "SKL-THROWN",
     "typicalAttribute": "STR",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready Knife permitted for Thrown, legal target in range",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-BOW-SHOOT",
     "name": "Shoot",
     "skillId": "SKL-BOW",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready bow, compatible arrow, valid grip, legal target",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-BOW-DRAW-BOW",
     "name": "Draw Bow",
     "skillId": "SKL-BOW",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "One Task",
+    "requirements": "Usable loaded bow, valid hands and sufficient space",
+    "tags": "Prepare",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-TRIGGERED-FIRE",
     "name": "Fire",
     "skillId": "SKL-TRIGGERED",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Half target Agility, rounded up",
+    "time": "One Task",
+    "requirements": "Ready Triggered weapon with ammunition and legal target",
+    "tags": "Attack",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-MOVEMENT-STEP",
     "name": "Step",
     "skillId": "SKL-MOVEMENT",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Automatic",
+    "difficulty": "\u2014",
+    "time": "One Task",
+    "requirements": "Legal adjacent destination; Engagement restrictions apply",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "automatic"
   },
   {
     "id": "TASK-MOVEMENT-MOVE",
     "name": "Move",
     "skillId": "SKL-MOVEMENT",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Automatic",
+    "difficulty": "\u2014",
+    "time": "One Task",
+    "requirements": "Not Engaged and legal traversable path",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "automatic"
   },
   {
     "id": "TASK-MOVEMENT-WITHDRAWAL",
     "name": "Withdrawal",
     "skillId": "SKL-MOVEMENT",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Automatic",
+    "difficulty": "\u2014",
+    "time": "One Task",
+    "requirements": "Actor is Engaged; only during own Turn",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "automatic"
   },
   {
     "id": "TASK-ACROBATICS-BALANCE",
     "name": "Balance",
     "skillId": "SKL-ACROBATICS",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Relevant movement interval",
+    "requirements": "Narrow, unstable, moving, or difficult surface",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-ACROBATICS-TUMBLE",
     "name": "Tumble",
     "skillId": "SKL-ACROBATICS",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Movement action",
+    "requirements": "Enough space and plausible tumbling path",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-ACROBATICS-CONTROLLED-FALL",
     "name": "Controlled Fall",
     "skillId": "SKL-ACROBATICS",
     "typicalAttribute": "AGL/HLT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "Immediate",
+    "requirements": "Some ability to orient, roll, brace, or choose landing",
+    "tags": "Recover",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-ACROBATICS-VAULT",
     "name": "Vault",
     "skillId": "SKL-ACROBATICS",
     "typicalAttribute": "AGL/STR",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Movement action",
+    "requirements": "Plausible obstacle and sufficient approach or support",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-ACROBATICS-RECOVER-BALANCE",
     "name": "Recover Balance",
     "skillId": "SKL-ACROBATICS",
     "typicalAttribute": "AGL/STR",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed or Opposed",
+    "difficulty": "Contextual",
+    "time": "Immediate or Reaction",
+    "requirements": "Off balance but able to attempt recovery",
+    "tags": "Recover",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-DODGE-EVADE",
     "name": "Dodge",
     "skillId": "SKL-DODGE",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "Reaction",
+    "requirements": "Aware of threat, sufficient mobility, plausible evasion path",
+    "tags": "Reaction",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-RUNNING-SPRINT",
     "name": "Sprint",
     "skillId": "SKL-RUNNING",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "One Task",
+    "requirements": "Can move, not Engaged, plausible traversable path",
+    "tags": "Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-AWARENESS-NOTICE",
     "name": "Notice",
     "skillId": "SKL-AWARENESS",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "Immediate",
+    "requirements": "One discrete subject presents perceptible evidence",
+    "tags": "Detect",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-OBSERVATION-SEARCH",
     "name": "Search",
     "skillId": "SKL-OBSERVATION",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "Usually one minute per small area",
+    "requirements": "Defined search area and plausible method and access",
+    "tags": "Search",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-STEALTH-HIDE",
     "name": "Hide",
     "skillId": "SKL-STEALTH",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "1 second",
+    "requirements": "Plausible hiding position or concealment opportunity",
+    "tags": "Conceal",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-STEALTH-SNEAK",
     "name": "Sneak",
     "skillId": "SKL-STEALTH",
     "typicalAttribute": "AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "1 second",
+    "requirements": "Hidden 1+, not Engaged, can legally Move",
+    "tags": "Conceal; Movement",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-CONCEALMENT-CONCEAL",
     "name": "Conceal",
     "skillId": "SKL-CONCEALMENT",
     "typicalAttribute": "INT/AGL",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "At least one Task",
+    "requirements": "One discrete non-Actor subject and plausible concealment means",
+    "tags": "Conceal",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-TACTICS-PREPARE-AMBUSH",
     "name": "Prepare Ambush",
     "skillId": "SKL-TACTICS",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "Contextual",
+    "time": "At least one minute",
+    "requirements": "Plausible position, participants, and preparation opportunity",
+    "tags": "Prepare",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-TACTICS-ANTICIPATE-AMBUSH",
     "name": "Anticipate Ambush",
     "skillId": "SKL-TACTICS",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Opposed",
+    "difficulty": "Prepare Ambush result",
+    "time": "Immediate",
+    "requirements": "Approaching/present in Ambush Situation with evidence",
+    "tags": "Analyze",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-MEDICINE-FIRST-AID",
     "name": "First Aid",
     "skillId": "SKL-MEDICINE",
     "typicalAttribute": "INT",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Cooperative Fixed",
+    "difficulty": "1",
+    "time": "One Short Rest",
+    "requirements": "Qualifying Short Rest, access to patient, plausible treatment",
+    "tags": "Healing",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-PHYSICIAN-ATTENDING",
     "name": "Attending",
     "skillId": "SKL-PHYSICIAN",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Cooperative Fixed",
+    "difficulty": "1",
+    "time": "One Long Rest",
+    "requirements": "Qualifying Long Rest, access, physician-level care",
+    "tags": "Healing",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FLETCHER-FLETCH",
     "name": "Fletch",
     "skillId": "SKL-FLETCHER",
     "typicalAttribute": "INT",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "One Short Rest",
+    "requirements": "Fletching tools, materials, compatible pool below Capacity",
+    "tags": "Create",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FOCUS-EVALUATE",
     "name": "Evaluate",
     "skillId": "SKL-FOCUS",
     "typicalAttribute": "INT",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "Immediate or Reflexive",
+    "requirements": "Visible target and stated observable assessment aspect",
+    "tags": "Analyze",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FOCUS-CENTER",
     "name": "Center",
     "skillId": "SKL-FOCUS",
     "typicalAttribute": "CHA",
-    "status": "Provisional"
+    "status": "Provisional",
+    "resolutionType": "Fixed",
+    "difficulty": "1",
+    "time": "One Task",
+    "requirements": "At least 1 Pressure and conscious self-regulation",
+    "tags": "Recover",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FOCUS-CONVALESCE",
     "name": "Convalesce",
     "skillId": "SKL-FOCUS",
     "typicalAttribute": "HLT/ESS",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Mode-specific",
+    "time": "Long Rest or Episode end",
+    "requirements": "Mode-specific recovery requirements",
+    "tags": "Healing",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FOCUS-ADJUST-TRAIT",
     "name": "Adjust Trait",
     "skillId": "SKL-FOCUS",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "0",
+    "time": "One Task",
+    "requirements": "Trait with MOD-SELECTIVE and legal location/rank choice",
+    "tags": "Control",
+    "defaultDifficulty": 0,
+    "rollMode": "roll"
   },
   {
     "id": "TASK-FOCUS-TAKE-AIM",
     "name": "Take Aim",
     "skillId": "SKL-FOCUS",
     "typicalAttribute": "INT",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Automatic",
+    "difficulty": "\u2014",
+    "time": "One Task",
+    "requirements": "Perceptible target and controlled item for later Attack",
+    "tags": "Prepare",
+    "defaultDifficulty": 1,
+    "rollMode": "automatic"
   },
   {
     "id": "TASK-FOCUS-JUGGLE",
     "name": "Juggle",
     "skillId": "SKL-FOCUS",
     "typicalAttribute": "AGL",
-    "status": "Active Working"
+    "status": "Active Working",
+    "resolutionType": "Fixed",
+    "difficulty": "Items currently juggled",
+    "time": "One Task",
+    "requirements": "Juggler Trait, multiple functional hands, eligible items",
+    "tags": "Control",
+    "defaultDifficulty": 1,
+    "rollMode": "roll"
   }
 ];

@@ -32,5 +32,6 @@
   "AETHERCHROME.SkillTreeNote": "Registered Alpha topology; ratings 0\u201310",
   "AETHERCHROME.Task": "Available Task",
   "AETHERCHROME.SelectTask": "Select Task\u2026",
-  "AETHERCHROME.NoRegisteredTasks": "No registered Tasks"
+  "AETHERCHROME.NoRegisteredTasks": "No registered Tasks",
+  "AETHERCHROME.TaskDetailsRoll": "Task Details and Roll"
 }
