@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.6 — 2026-07-29
+
+### Fixed
+
+- Corrected Foundry action callback receiver handling.
+- Private static Task helpers are now invoked through `AetherchromeActorSheet`, not the sheet-bound `this`.
+- The sheet instance is passed explicitly into the Skill Pool roller.
+- Actor and speaker resolution now use the supplied sheet instance.
+
 ## 0.0.5 — 2026-07-29
 
 ### Fixed

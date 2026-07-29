@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome",
-  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.5 stabilizes Task Details and Skill Pool rolling.",
-  "version": "0.0.5",
+  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.6 fixes Task action callback receiver handling.",
+  "version": "0.0.6",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -42,7 +42,7 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.5/aetherchrome-v0.0.5.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.6/aetherchrome-v0.0.6.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md"

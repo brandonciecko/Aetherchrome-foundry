@@ -155,7 +155,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     if (task.rollMode === "automatic") {
       await DialogV2.confirm({
         window: { title: `${task.name} — Automatic Task` },
-        content: this.#taskDetailsHtml(skill, task, baseSkill, null, true),
+        content: AetherchromeActorSheet.#taskDetailsHtml(skill, task, baseSkill, null, true),
         yes: { label: "Acknowledge" },
         no: { label: "Close" },
         modal: true,
@@ -167,7 +167,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     if (task.rollMode === "chained") {
       await DialogV2.confirm({
         window: { title: `${task.name} — Chained Task` },
-        content: this.#taskDetailsHtml(skill, task, baseSkill, null, true) +
+        content: AetherchromeActorSheet.#taskDetailsHtml(skill, task, baseSkill, null, true) +
           '<p class="aec-dialog-warning">This Task modifies a legal base Attack. It does not create an independent Skill Pool roll.</p>',
         yes: { label: "Acknowledge" },
         no: { label: "Close" },
@@ -188,7 +188,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     }).join("");
 
     const content = `
-      ${this.#taskDetailsHtml(skill, task, baseSkill)}
+      ${AetherchromeActorSheet.#taskDetailsHtml(skill, task, baseSkill)}
       <div class="aec-roll-fields">
         <label>
           <span>Governing Current Attribute</span>
@@ -252,7 +252,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       const difficulty = Math.max(0, Number(formData.difficulty) || 0);
       const note = String(formData.note ?? "").trim();
 
-      await this.#rollSkillPool({
+      await AetherchromeActorSheet.#rollSkillPool(this, {
         skill,
         task,
         attributeKey,
@@ -290,13 +290,13 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     `;
   }
 
-  static async #rollSkillPool({skill, task, attributeKey, baseSkill, modifier, difficulty, note}) {
+  static async #rollSkillPool(sheet, {skill, task, attributeKey, baseSkill, modifier, difficulty, note}) {
     const attributeDefinition = ATTRIBUTE_DEFINITIONS.find(entry => entry.key === attributeKey);
-    if (!attributeDefinition || !this.actor.system.attributes[attributeKey]) {
+    if (!attributeDefinition || !sheet.actor.system.attributes[attributeKey]) {
       throw new Error(`Unknown governing Attribute: ${attributeKey}`);
     }
 
-    const attribute = Math.max(0, Number(this.actor.system.attributes[attributeKey].current ?? 0));
+    const attribute = Math.max(0, Number(sheet.actor.system.attributes[attributeKey].current ?? 0));
     const effectiveSkill = Math.max(0, baseSkill + modifier);
     const isChanceDie = effectiveSkill === 0;
     const threshold = isChanceDie ? chanceThreshold(attribute) : attribute;
@@ -334,8 +334,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     `;
 
     await roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-      flavor: `${this.actor.name} — ${skill.name}: ${task.name}`,
+      speaker: ChatMessage.getSpeaker({ actor: sheet.actor }),
+      flavor: `${sheet.actor.name} — ${skill.name}: ${task.name}`,
       content
     });
   }

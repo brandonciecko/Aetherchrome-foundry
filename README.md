@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.5 — Stable Task Details and Skill Pool Roll Dialog
+## Version 0.0.6 — Task Action Receiver Fix
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -43,3 +43,11 @@ This Foundry VTT v14 milestone adds the first playable implementation of Aetherc
 ## v0.0.5 dialog correction
 
 The Skill Pool dialog now uses a custom `DialogV2.wait` submission callback and reads values from `button.form.elements`. This avoids reliance on helper return-shape behavior and reports unexpected roll errors in the Foundry console.
+
+
+## v0.0.6 action correction
+
+Foundry invokes registered sheet actions with the Actor sheet instance as `this`.
+Private static helpers cannot be called as `this.#helper()` from that receiver.
+The Task action now invokes helpers through the class and passes the sheet
+instance explicitly to the Skill Pool roller.
