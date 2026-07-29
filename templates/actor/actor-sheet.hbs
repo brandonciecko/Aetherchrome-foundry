@@ -247,6 +247,16 @@
         {{/if}}
 
         <div class="aec-inventory-controls">
+          {{#if item.isWeapon}}
+          <button type="button" data-action="weaponAttack" data-item-id="{{item.id}}" title="Attack with {{item.name}}">
+            <i class="fa-solid fa-crosshairs"></i>
+          </button>
+          {{#if item.canReload}}
+          <button type="button" data-action="weaponReload" data-item-id="{{item.id}}" title="Reload {{item.name}}">
+            <i class="fa-solid fa-arrow-rotate-right"></i>
+          </button>
+          {{/if}}
+          {{/if}}
           <button type="button" data-action="itemEdit" data-item-id="{{item.id}}" title="Edit Item">
             <i class="fa-solid fa-pen-to-square"></i>
           </button>

@@ -25,6 +25,14 @@ export class AetherchromeItemData extends foundry.abstract.TypeDataModel {
       grip: new fields.StringField({required: true, nullable: false, initial: ""}),
       configuration: new fields.StringField({required: true, nullable: false, initial: ""}),
       coverage: new fields.StringField({required: true, nullable: false, initial: ""}),
+      damageAttribute: new fields.StringField({required: true, nullable: false, initial: "strength"}),
+      rangeIncrement: new fields.NumberField({
+        required: true, nullable: false, integer: true, initial: 0, min: 0
+      }),
+      maximumIncrements: new fields.NumberField({
+        required: true, nullable: false, integer: true, initial: 0, min: 0
+      }),
+      ammunitionType: new fields.StringField({required: true, nullable: false, initial: ""}),
       resource: new fields.SchemaField({
         value: new fields.NumberField({
           required: true, nullable: false, integer: true, initial: 0, min: 0

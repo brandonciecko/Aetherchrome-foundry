@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.9 — Items and Equipment Foundation
+## Version 0.0.10 — Attack and Damage Foundation
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -99,3 +99,21 @@ no existing embedded Items and no recorded package.
 This release establishes the data and interface foundation. It does not yet
 automate attack resolution, Damage Pools, Armor, Shield Block, Encumbrance
 Statuses, or ammunition consumption.
+
+
+## v0.0.10 Attack and Damage
+
+Ready Weapon Items now provide an Attack control. The workflow rolls the
+selected Skill and Attribute, calculates Passive Defense, Initial Aim, manual
+active-defense adjustment, Final Aim, the weapon-based Damage Pool, damage
+successes, Armor reduction, and resulting HP Damage.
+
+Ranged bow attacks apply range-increment penalties and require loaded
+ammunition. Reload transfers one compatible arrow from the Actor's ammunition
+Item into the bow. A resolved bow attack consumes the loaded arrow and removes
+Ready.
+
+Attack and Damage are posted as linked chat cards using Foundry's current Roll
+Mode. Automatic targeting, Reaction rolls, location Armor lookup, target HP
+application, Heavy Blow, Called Shot, and Take Aim effect storage remain for
+later combat milestones.

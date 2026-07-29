@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.0.10 — 2026-07-29
+
+### Added
+
+- Weapon Attack button on embedded Weapon Items.
+- Attack dialog driven by the selected embedded weapon.
+- Skill and acting Attribute selection.
+- Pressure, Open Skill Effort, situational modifiers, Take Aim bonuses, and ranged increment penalties in Effective Skill.
+- Passive Defense calculated as half the entered target Attribute, rounded up.
+- Cover modifiers of 0–2 added to Passive Defense.
+- Initial Aim and Final Aim calculation.
+- Manual active-defense Aim adjustment pending Reaction automation.
+- Damage Pool calculation from Final Aim, weapon Item Rating, grip modifier, and explicit damage modifiers.
+- Damage Pool rolls against a selected damage Attribute.
+- Final Armor subtraction and resulting HP Damage display.
+- Linked Attack and Damage chat cards.
+- Foundry Public, GM, Blind, and Self roll-mode handling for both rolls.
+- Bow ammunition capacity and loaded-ammunition tracking.
+- Reload control that transfers compatible ammunition from the Actor to the bow.
+- Shoot consumption of loaded ammunition and removal of Ready.
+- Weapon fields for damage Attribute, Range Increment, Maximum Increments, and ammunition type.
+
+### Rule boundaries
+
+- Active Defense is represented by a manual Aim adjustment; no Reaction roll automation is included.
+- Final Armor is entered manually; location coverage and Shield Block Armor are not yet calculated automatically.
+- HP Damage is reported but not automatically applied to a target Actor.
+- Take Aim is entered as an explicit bonus rather than stored as a target-bound effect.
+- Heavy Blow and Called Shot are not automated in this release.
+- Reload and Draw Bow timing are represented through inventory controls; Encounter action-economy enforcement remains deferred.
+
 ## 0.0.9 — 2026-07-29
 
 ### Added

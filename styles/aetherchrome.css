@@ -686,3 +686,67 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* v0.0.10: Attack and Damage foundation */
+
+.aec-attack-dialog {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.aec-attack-dialog fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.7rem;
+}
+
+.aec-attack-dialog label {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.aec-attack-dialog label > span {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.aec-attack-summary {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem;
+  border: 1px solid var(--color-border-light-secondary);
+}
+
+.aec-chat-card {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.aec-chat-card h3 {
+  margin: 0;
+  border-bottom: 1px solid var(--color-border-light-secondary);
+  padding-bottom: 0.25rem;
+}
+
+.aec-chat-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(100px, 1fr);
+  gap: 0.25rem 0.6rem;
+}
+
+.aec-chat-grid span {
+  opacity: 0.75;
+}
+
+.aec-chat-link {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.aec-inventory-controls {
+  flex-wrap: wrap;
+}

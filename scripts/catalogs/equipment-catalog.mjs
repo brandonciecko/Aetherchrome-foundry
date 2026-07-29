@@ -16,6 +16,10 @@ function item({
   grip = "",
   configuration = "",
   coverage = "",
+  damageAttribute = "strength",
+  rangeIncrement = 0,
+  maximumIncrements = 0,
+  ammunitionType = "",
   resourceValue = 0,
   resourceMax = 0,
   resourceUnit = "",
@@ -41,6 +45,10 @@ function item({
       grip,
       configuration,
       coverage,
+      damageAttribute,
+      rangeIncrement,
+      maximumIncrements,
+      ammunitionType,
       resource: {
         value: resourceValue,
         max: resourceMax,
@@ -116,7 +124,14 @@ export const ALPHA_ITEMS = {
     rating: 2,
     load: 3,
     grip: "Two-handed",
-    notes: "Arrow ammunition. Range Increment 20 hexes; maximum 5 increments."
+    damageAttribute: "strength",
+    rangeIncrement: 20,
+    maximumIncrements: 5,
+    ammunitionType: "arrow",
+    resourceValue: 0,
+    resourceMax: 1,
+    resourceUnit: "loaded arrow",
+    notes: "Arrow ammunition. Range Increment 20 hexes; maximum 5 increments. Capacity 1; Reload loads one arrow and Draw Bow applies Ready."
   }),
   "ITM-ARM-TORSO-PADDED-001": item({
     id: "ITM-ARM-TORSO-PADDED-001",

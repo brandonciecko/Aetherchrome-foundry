@@ -36,6 +36,20 @@
       <label><span>Load per unit</span>
         <input name="system.load" type="number" value="{{system.load}}" min="0" step="0.05" {{disabled (not editable)}}>
       </label>
+      {{#if isWeapon}}
+      <label><span>Damage Attribute key</span>
+        <input name="system.damageAttribute" type="text" value="{{system.damageAttribute}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Range Increment</span>
+        <input name="system.rangeIncrement" type="number" value="{{system.rangeIncrement}}" min="0" step="1" {{disabled (not editable)}}>
+      </label>
+      <label><span>Maximum Increments</span>
+        <input name="system.maximumIncrements" type="number" value="{{system.maximumIncrements}}" min="0" step="1" {{disabled (not editable)}}>
+      </label>
+      <label><span>Ammunition Type</span>
+        <input name="system.ammunitionType" type="text" value="{{system.ammunitionType}}" {{disabled (not editable)}}>
+      </label>
+      {{/if}}
     </div>
   </section>
 

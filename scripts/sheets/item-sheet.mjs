@@ -27,7 +27,7 @@ export class AetherchromeItemSheet extends HandlebarsApplicationMixin(ItemSheetV
       isGear: type === "gear",
       isAmmunition: type === "ammunition",
       isPackage: type === "package",
-      hasResource: ["gear", "ammunition"].includes(type)
+      hasResource: ["gear", "ammunition"].includes(type) || Number(this.item.system.resource?.max ?? 0) > 0
     }, {inplace: false});
   }
 }

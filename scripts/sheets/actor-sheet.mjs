@@ -95,6 +95,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       itemQuantityIncrease: AetherchromeActorSheet.#onItemQuantityIncrease,
       itemResourceDecrease: AetherchromeActorSheet.#onItemResourceDecrease,
       itemResourceIncrease: AetherchromeActorSheet.#onItemResourceIncrease,
+      weaponAttack: AetherchromeActorSheet.#onWeaponAttack,
+      weaponReload: AetherchromeActorSheet.#onWeaponReload,
       applyEquipmentPackage: AetherchromeActorSheet.#onApplyEquipmentPackage
     }
   };
@@ -167,7 +169,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           hasResource: resourceMax > 0,
           resourceValue,
           resourceMax,
-          resourceUnit: item.system.resource?.unit || ""
+          resourceUnit: item.system.resource?.unit || "",
+          isWeapon: item.type === "weapon",
+          canReload: item.type === "weapon" && resourceMax > 0 && Boolean(item.system.ammunitionType),
+          itemRating: Number(item.system.itemRating ?? 0)
         };
       }),
       totalLoad: this.actor.items.reduce((total, item) => {
@@ -477,6 +482,332 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   static async #onItemResourceIncrease(event, target) {
     event.preventDefault();
     await AetherchromeActorSheet.#adjustItemResource(this, target, 1);
+  }
+
+  static #attributeOptions(sheet, selectedKey = "") {
+    return ATTRIBUTE_DEFINITIONS.map(attribute => {
+      const current = Number(sheet.actor.system.attributes[attribute.key]?.current ?? 0);
+      const selected = attribute.key === selectedKey ? " selected" : "";
+      return `<option value="${attribute.key}"${selected}>${attribute.abbreviation} — ${attribute.label} (${current})</option>`;
+    }).join("");
+  }
+
+  static #skillOptions(sheet, weapon) {
+    const id = String(weapon.system.registryId ?? "");
+    const allowed = id.includes("BOW")
+      ? ["SKL-BOW"]
+      : id.includes("DAGGER")
+        ? ["SKL-KNIVES", "SKL-SWORDS"]
+        : ["SKL-SWORDS", "SKL-MELEE", "SKL-FIGHT"];
+
+    return allowed.map(skillId => {
+      const skill = SKILL_CATALOG.find(entry => entry.id === skillId);
+      if (!skill) return "";
+      const key = dataKey(skill.id);
+      const rating = Number(sheet.actor.system.skillTree[key]?.rating ?? 0);
+      return `<option value="${skill.id}">${skill.name} (${rating})</option>`;
+    }).join("");
+  }
+
+  static #countSuccesses(roll, threshold) {
+    return roll.dice.flatMap(die => die.results)
+      .filter(result => result.active !== false)
+      .filter(result => Number(result.result) <= threshold)
+      .length;
+  }
+
+  static #rollResults(roll) {
+    return roll.dice.flatMap(die => die.results)
+      .filter(result => result.active !== false)
+      .map(result => Number(result.result));
+  }
+
+  static async #onWeaponReload(event, target) {
+    event.preventDefault();
+    const weapon = AetherchromeActorSheet.#embeddedItem(this, target);
+    if (!weapon || weapon.type !== "weapon") return;
+
+    const capacity = Math.max(0, Number(weapon.system.resource?.max ?? 0));
+    const loaded = Math.max(0, Number(weapon.system.resource?.value ?? 0));
+    if (capacity <= 0) {
+      ui.notifications.warn(`${weapon.name} has no ammunition capacity.`);
+      return;
+    }
+    if (loaded >= capacity) {
+      ui.notifications.warn(`${weapon.name} is already loaded.`);
+      return;
+    }
+
+    const ammoType = String(weapon.system.ammunitionType ?? "").toLowerCase();
+    const ammunition = this.actor.items.find(item => {
+      if (item.type !== "ammunition") return false;
+      const available = Math.max(
+        Number(item.system.quantity ?? 0),
+        Number(item.system.resource?.value ?? 0)
+      );
+      return available > 0 && (
+        !ammoType ||
+        String(item.system.registryId ?? "").toLowerCase().includes(ammoType) ||
+        String(item.name ?? "").toLowerCase().includes(ammoType)
+      );
+    });
+
+    if (!ammunition) {
+      ui.notifications.warn(`No compatible ${ammoType || "ammunition"} is available.`);
+      return;
+    }
+
+    const quantity = Math.max(0, Number(ammunition.system.quantity ?? 0));
+    const resourceValue = Math.max(0, Number(ammunition.system.resource?.value ?? 0));
+    const ammoUpdate = {};
+    if (quantity > 0) ammoUpdate["system.quantity"] = quantity - 1;
+    if (resourceValue > 0) ammoUpdate["system.resource.value"] = resourceValue - 1;
+
+    await ammunition.update(ammoUpdate);
+    await weapon.update({"system.resource.value": Math.min(capacity, loaded + 1)});
+
+    ui.notifications.info(`${weapon.name} loaded. Draw or Ready it before attacking.`);
+  }
+
+  static async #onWeaponAttack(event, target) {
+    event.preventDefault();
+    const weapon = AetherchromeActorSheet.#embeddedItem(this, target);
+    if (!weapon || weapon.type !== "weapon") return;
+
+    if (!weapon.system.ready) {
+      ui.notifications.warn(`${weapon.name} is not Ready.`);
+      return;
+    }
+
+    const ammoCapacity = Math.max(0, Number(weapon.system.resource?.max ?? 0));
+    const loadedAmmo = Math.max(0, Number(weapon.system.resource?.value ?? 0));
+    if (ammoCapacity > 0 && loadedAmmo <= 0) {
+      ui.notifications.warn(`${weapon.name} is not loaded.`);
+      return;
+    }
+
+    const isBow = String(weapon.system.registryId ?? "").includes("BOW");
+    const defaultAttackAttribute = "agility";
+    const defaultDamageAttribute = String(weapon.system.damageAttribute ?? "strength");
+    const skillOptions = AetherchromeActorSheet.#skillOptions(this, weapon);
+
+    const content = `
+      <form class="aec-attack-dialog">
+        <div class="aec-attack-summary">
+          <strong>${foundry.utils.escapeHTML(weapon.name)}</strong>
+          <span>Item Rating ${Number(weapon.system.itemRating ?? 0)}</span>
+          <span>${weapon.system.ready ? "Ready" : "Not Ready"}</span>
+        </div>
+
+        <fieldset>
+          <legend>Attack Test</legend>
+          <label><span>Skill</span><select name="skillId">${skillOptions}</select></label>
+          <label><span>Attack Attribute</span>
+            <select name="attackAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultAttackAttribute)}</select>
+          </label>
+          <label><span>Situational Modifier</span><input name="modifier" type="number" value="0" step="1"></label>
+          <label><span>Take Aim / other Effective Skill bonus</span><input name="aimBonus" type="number" value="0" step="1"></label>
+          ${isBow ? `
+          <label><span>Distance in hexes</span><input name="distance" type="number" value="1" min="1" step="1"></label>
+          ` : `<input name="distance" type="hidden" value="0">`}
+        </fieldset>
+
+        <fieldset>
+          <legend>Target and Aim</legend>
+          <label><span>Target name</span><input name="targetName" type="text" value="Target"></label>
+          <label><span>Target Attribute value</span><input name="targetAttribute" type="number" value="4" min="0" step="1"></label>
+          <label><span>Cover modifier to Passive Defense</span><input name="cover" type="number" value="0" min="0" max="2" step="1"></label>
+          <label><span>Active Defense Aim adjustment</span>
+            <input name="defenseAdjustment" type="number" value="0" step="1">
+          </label>
+          <p class="aec-dialog-note">Enter a negative value when a defense reduces Aim; enter a positive value when failure adds Aim.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Damage</legend>
+          <label><span>Damage Attribute</span>
+            <select name="damageAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultDamageAttribute)}</select>
+          </label>
+          <label><span>Final Armor at struck location</span><input name="armor" type="number" value="0" min="0" step="1"></label>
+          <label><span>Explicit Damage Pool modifier</span><input name="damageModifier" type="number" value="0" step="1"></label>
+          <label class="aec-checkbox-row">
+            <input name="twoHanded" type="checkbox" ${String(weapon.system.grip ?? "").includes("Two-handed") ? "checked" : ""}>
+            <span>Use two-handed sword grip modifier (+1 Damage Pool)</span>
+          </label>
+        </fieldset>
+      </form>
+    `;
+
+    const result = await DialogV2.wait({
+      window: {title: `${this.actor.name}: Attack with ${weapon.name}`},
+      content,
+      buttons: [
+        {
+          action: "attack",
+          label: "Resolve Attack",
+          default: true,
+          callback: (_event, button) => {
+            const form = button.form;
+            return {
+              skillId: form.elements.skillId.value,
+              attackAttribute: form.elements.attackAttribute.value,
+              modifier: Number(form.elements.modifier.value) || 0,
+              aimBonus: Number(form.elements.aimBonus.value) || 0,
+              distance: Number(form.elements.distance.value) || 0,
+              targetName: String(form.elements.targetName.value || "Target"),
+              targetAttribute: Math.max(0, Number(form.elements.targetAttribute.value) || 0),
+              cover: Math.max(0, Number(form.elements.cover.value) || 0),
+              defenseAdjustment: Number(form.elements.defenseAdjustment.value) || 0,
+              damageAttribute: form.elements.damageAttribute.value,
+              armor: Math.max(0, Number(form.elements.armor.value) || 0),
+              damageModifier: Number(form.elements.damageModifier.value) || 0,
+              twoHanded: Boolean(form.elements.twoHanded.checked)
+            };
+          }
+        },
+        {action: "cancel", label: "Cancel"}
+      ],
+      modal: true,
+      rejectClose: false
+    });
+
+    if (!result || result === "cancel") return;
+
+    const skill = SKILL_CATALOG.find(entry => entry.id === result.skillId);
+    if (!skill) {
+      ui.notifications.error("The selected attack Skill could not be found.");
+      return;
+    }
+
+    const skillRating = Math.max(0, Number(this.actor.system.skillTree[dataKey(skill.id)]?.rating ?? 0));
+    const attackThreshold = Math.max(0, Number(this.actor.system.attributes[result.attackAttribute]?.current ?? 0));
+    const pressure = Math.max(0, Number(this.actor.system.resources.pressure ?? 0));
+    const effortBonus = this.actor.system.resources.effort?.openSkill ? 1 : 0;
+
+    let rangeModifier = 0;
+    let rangeIncrement = 0;
+    if (isBow) {
+      const increment = Math.max(1, Number(weapon.system.rangeIncrement ?? 0));
+      rangeIncrement = Math.ceil(result.distance / increment);
+      const maximum = Math.max(0, Number(weapon.system.maximumIncrements ?? 0));
+      if (maximum && rangeIncrement > maximum) {
+        ui.notifications.warn(`${result.targetName} is beyond ${weapon.name}'s maximum range.`);
+        return;
+      }
+      rangeModifier = -(Math.max(1, rangeIncrement) - 1);
+    }
+
+    const effectiveSkill = Math.max(
+      0,
+      skillRating + result.modifier + result.aimBonus + rangeModifier + effortBonus - pressure
+    );
+    const chanceDie = effectiveSkill === 0;
+    const attackDice = chanceDie ? 1 : effectiveSkill;
+    const attackSuccessThreshold = chanceDie ? chanceThreshold(attackThreshold) : attackThreshold;
+    const attackRoll = await new Roll(`${attackDice}d10`).evaluate();
+    const attackSuccesses = AetherchromeActorSheet.#countSuccesses(attackRoll, attackSuccessThreshold);
+    const passiveDefense = Math.ceil(result.targetAttribute / 2) + result.cover;
+    const initialAim = attackSuccesses - passiveDefense;
+    const finalAim = initialAim + result.defenseAdjustment;
+
+    const weaponRating = Number(weapon.system.itemRating ?? 0);
+    const gripModifier = result.twoHanded && String(weapon.system.registryId ?? "").includes("SWORD") ? 1 : 0;
+    const damagePool = Math.max(0, finalAim + weaponRating + gripModifier + result.damageModifier);
+    const damageThreshold = Math.max(0, Number(this.actor.system.attributes[result.damageAttribute]?.current ?? 0));
+
+    const rollMode = game.settings.get("core", "rollMode");
+    const attackResults = AetherchromeActorSheet.#rollResults(attackRoll);
+    const attackContent = `
+      <section class="aec-chat-card aec-attack-card">
+        <h3>${foundry.utils.escapeHTML(this.actor.name)} attacks ${foundry.utils.escapeHTML(result.targetName)}</h3>
+        <div class="aec-chat-grid">
+          <span>Weapon</span><strong>${foundry.utils.escapeHTML(weapon.name)}</strong>
+          <span>Skill</span><strong>${foundry.utils.escapeHTML(skill.name)} ${skillRating}</strong>
+          <span>Attack Attribute</span><strong>${attackThreshold}</strong>
+          <span>Situational</span><strong>${signedNumber(result.modifier)}</strong>
+          <span>Take Aim / bonus</span><strong>${signedNumber(result.aimBonus)}</strong>
+          <span>Range</span><strong>${isBow ? `${result.distance} hexes · increment ${rangeIncrement} (${signedNumber(rangeModifier)})` : "Close"}</strong>
+          <span>Pressure</span><strong>−${pressure}</strong>
+          <span>Effort</span><strong>${signedNumber(effortBonus)}</strong>
+          <span>Effective Skill</span><strong>${effectiveSkill}${chanceDie ? " · Chance Die" : ""}</strong>
+          <span>Dice</span><strong>${attackResults.join(", ")}</strong>
+          <span>Attack Successes</span><strong>${attackSuccesses}</strong>
+          <span>Passive Defense</span><strong>${passiveDefense}</strong>
+          <span>Initial Aim</span><strong>${initialAim}</strong>
+          <span>Defense adjustment</span><strong>${signedNumber(result.defenseAdjustment)}</strong>
+          <span>Final Aim</span><strong>${finalAim}</strong>
+        </div>
+      </section>
+    `;
+
+    const attackMessage = await attackRoll.toMessage(
+      {
+        speaker: ChatMessage.getSpeaker({actor: this.actor}),
+        flavor: `${this.actor.name} — ${weapon.name} Attack`,
+        content: attackContent
+      },
+      {messageMode: rollMode}
+    );
+
+    if (effortBonus > 0) {
+      await this.actor.update({"system.resources.effort.openSkill": false});
+    }
+
+    let damageSuccesses = 0;
+    let damageResults = [];
+    let damageRoll = null;
+
+    if (damagePool > 0) {
+      damageRoll = await new Roll(`${damagePool}d10`).evaluate();
+      damageSuccesses = AetherchromeActorSheet.#countSuccesses(damageRoll, damageThreshold);
+      damageResults = AetherchromeActorSheet.#rollResults(damageRoll);
+    }
+
+    const hpDamage = Math.max(0, damageSuccesses - result.armor);
+    const damageContent = `
+      <section class="aec-chat-card aec-damage-card">
+        <h3>Damage from ${foundry.utils.escapeHTML(weapon.name)}</h3>
+        <p class="aec-chat-link">Attack message: ${attackMessage?.id ?? "linked attack"}</p>
+        <div class="aec-chat-grid">
+          <span>Final Aim</span><strong>${finalAim}</strong>
+          <span>Weapon Item Rating</span><strong>${weaponRating}</strong>
+          <span>Grip modifier</span><strong>${signedNumber(gripModifier)}</strong>
+          <span>Other Damage modifier</span><strong>${signedNumber(result.damageModifier)}</strong>
+          <span>Damage Pool</span><strong>${damagePool}</strong>
+          <span>Damage Attribute</span><strong>${damageThreshold}</strong>
+          <span>Dice</span><strong>${damageResults.length ? damageResults.join(", ") : "No roll"}</strong>
+          <span>Damage Successes</span><strong>${damageSuccesses}</strong>
+          <span>Final Armor</span><strong>${result.armor}</strong>
+          <span>HP Damage</span><strong>${hpDamage}</strong>
+        </div>
+      </section>
+    `;
+
+    if (damageRoll) {
+      await damageRoll.toMessage(
+        {
+          speaker: ChatMessage.getSpeaker({actor: this.actor}),
+          flavor: `${this.actor.name} — ${weapon.name} Damage`,
+          content: damageContent
+        },
+        {messageMode: rollMode}
+      );
+    } else {
+      const messageData = {
+        speaker: ChatMessage.getSpeaker({actor: this.actor}),
+        flavor: `${this.actor.name} — ${weapon.name} Damage`,
+        content: damageContent
+      };
+      ChatMessage.applyRollMode(messageData, rollMode);
+      await ChatMessage.create(messageData);
+    }
+
+    if (ammoCapacity > 0) {
+      await weapon.update({
+        "system.resource.value": Math.max(0, loadedAmmo - 1),
+        "system.ready": false
+      });
+    }
   }
 
   static async #onApplyEquipmentPackage(event, target) {
