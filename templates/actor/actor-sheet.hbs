@@ -31,10 +31,61 @@
     </div>
   </section>
 
+  <section class="aec-panel aec-secondary-attributes">
+    <div class="aec-section-heading">
+      <h2>{{localize "AETHERCHROME.SecondaryAttributes"}}</h2>
+      <span>Live resources and current Pressure</span>
+    </div>
+    <div class="aec-secondary-grid">
+      <div class="aec-secondary-resource">
+        <strong>HP</strong>
+        <label>
+          <span>{{localize "AETHERCHROME.Current"}}</span>
+          <input name="system.resources.health.value" type="number" value="{{system.resources.health.value}}" {{disabled (not editable)}}>
+        </label>
+        <span class="aec-slash">/</span>
+        <label>
+          <span>{{localize "AETHERCHROME.Maximum"}}</span>
+          <input name="system.resources.health.max" type="number" value="{{system.resources.health.max}}" min="0" {{disabled (not editable)}}>
+        </label>
+      </div>
+
+      <div class="aec-secondary-resource">
+        <strong>MP</strong>
+        <label>
+          <span>{{localize "AETHERCHROME.Current"}}</span>
+          <input name="system.resources.magic.value" type="number" value="{{system.resources.magic.value}}" min="0" {{disabled (not editable)}}>
+        </label>
+        <span class="aec-slash">/</span>
+        <label>
+          <span>{{localize "AETHERCHROME.Maximum"}}</span>
+          <input name="system.resources.magic.max" type="number" value="{{system.resources.magic.max}}" min="0" {{disabled (not editable)}}>
+        </label>
+      </div>
+
+      <div class="aec-pressure-control">
+        <strong>Pressure</strong>
+        <button type="button" data-action="pressureDecrease" aria-label="Decrease Pressure" {{disabled pressureAtMinimum}}>
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <output aria-label="Current Pressure">{{system.resources.pressure}}</output>
+        <button type="button" data-action="pressureIncrease" aria-label="Increase Pressure" {{disabled pressureAtMaximum}}>
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
   <section class="aec-panel">
     <div class="aec-section-heading">
-      <h2>{{localize "AETHERCHROME.SkillTree"}}</h2>
-      <span>{{localize "AETHERCHROME.SkillTreeNote"}}</span>
+      <div>
+        <h2>{{localize "AETHERCHROME.SkillTree"}}</h2>
+        <span>{{localize "AETHERCHROME.SkillTreeNote"}}</span>
+      </div>
+      <div class="aec-tree-controls">
+        <button type="button" data-action="expandAllSkills">Expand All</button>
+        <button type="button" data-action="collapseAllSkills">Collapse All</button>
+      </div>
     </div>
     <div class="aec-tree-header">
       <span>{{localize "AETHERCHROME.SkillName"}}</span>
@@ -43,12 +94,24 @@
     </div>
     <div class="aec-skill-tree">
       {{#each skillRows as |skill|}}
-      <div class="aec-tree-row" style="--aec-depth: {{skill.depth}};">
+      <div class="aec-tree-row{{#if skill.hidden}} aec-tree-row-hidden{{/if}}" style="--aec-depth: {{skill.depth}};">
         <div class="aec-tree-skill" style="padding-left: {{skill.indent}}px;">
-          {{#if skill.depth}}<span class="aec-tree-branch">└</span>{{/if}}
+          {{#if skill.hasChildren}}
+          <button
+            type="button"
+            class="aec-tree-toggle"
+            data-action="toggleSkillBranch"
+            data-skill-id="{{skill.id}}"
+            aria-label="{{#if skill.expanded}}Collapse{{else}}Expand{{/if}} {{skill.name}}"
+            title="{{#if skill.expanded}}Collapse{{else}}Expand{{/if}} {{skill.name}}">
+            <i class="fa-solid {{#if skill.expanded}}fa-chevron-down{{else}}fa-chevron-right{{/if}}"></i>
+          </button>
+          {{else}}
+          <span class="aec-tree-toggle-spacer"></span>
+          {{/if}}
           <span>
             <strong>{{skill.name}}</strong>
-            <small>{{skill.recordType}} · {{skill.primaryAttribute}}</small>
+            <small>{{skill.recordType}}</small>
           </span>
         </div>
         <input
@@ -64,9 +127,7 @@
           <select name="system.skillTree.{{skill.key}}.selectedTask" {{disabled (not ../editable)}}>
             <option value="">{{localize "AETHERCHROME.SelectTask"}}</option>
             {{#each skill.tasks as |task|}}
-            <option value="{{task.id}}" {{#if task.selected}}selected{{/if}}>
-              {{task.name}} [{{task.typicalAttribute}}]
-            </option>
+            <option value="{{task.id}}" {{#if task.selected}}selected{{/if}}>{{task.name}}</option>
             {{/each}}
           </select>
           <button
@@ -82,19 +143,6 @@
         {{/if}}
       </div>
       {{/each}}
-    </div>
-  </section>
-
-  <section class="aec-panel aec-compact-panel">
-    <h2>{{localize "AETHERCHROME.Resources"}}</h2>
-    <div class="aec-resource-row">
-      <label><span>{{localize "AETHERCHROME.HealthCurrent"}}</span>
-        <input name="system.resources.health.value" type="number" value="{{system.resources.health.value}}" min="0" {{disabled (not editable)}}>
-      </label>
-      <span class="aec-slash">/</span>
-      <label><span>{{localize "AETHERCHROME.HealthMaximum"}}</span>
-        <input name="system.resources.health.max" type="number" value="{{system.resources.health.max}}" min="0" {{disabled (not editable)}}>
-      </label>
     </div>
   </section>
 

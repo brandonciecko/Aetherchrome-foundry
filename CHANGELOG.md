@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.0.7 — 2026-07-29
+
+### Added
+
+- Secondary Attributes section between Attributes and Skills.
+- Current and Maximum HP fields.
+- Current and Maximum MP fields.
+- Compact Pressure control with decrement, current value, and increment controls.
+- Automatic Pressure penalty on every Skill Pool roll.
+- Expandable and collapsible Skill Tree branches.
+- Expand All and Collapse All controls.
+- Per-user Skill Tree expansion state for each Actor.
+
+### Changed
+
+- Skills and Tasks no longer display suggested or governing Attributes.
+- Every ordinary Skill Pool roll requires explicit selection from all six Current Attributes.
+- The Task Details panel no longer displays Typical Attribute.
+- Situational modifiers and Pressure are shown separately in the roll dialog and chat result.
+- HP, MP, and Pressure now appear before the Skill Tree.
+
+### Rules implemented
+
+- Alpha 0.1 Pressure is bounded from 0 through 4.
+- Effective Skill is reduced by Current Pressure on Skill rolls.
+- Pressure does not alter the selected Current Attribute or Difficulty.
+
 ## 0.0.6 — 2026-07-29
 
 ### Fixed

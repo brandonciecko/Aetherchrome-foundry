@@ -64,8 +64,15 @@ export class AetherchromeActorData extends foundry.abstract.TypeDataModel {
       ),
       resources: new fields.SchemaField({
         health: new fields.SchemaField({
-          value: new fields.NumberField({required: true, nullable: false, integer: true, initial: 10, min: 0}),
-          max: new fields.NumberField({required: true, nullable: false, integer: true, initial: 10, min: 0})
+          value: new fields.NumberField({required: true, nullable: false, integer: true, initial: 4}),
+          max: new fields.NumberField({required: true, nullable: false, integer: true, initial: 4, min: 0})
+        }),
+        magic: new fields.SchemaField({
+          value: new fields.NumberField({required: true, nullable: false, integer: true, initial: 4, min: 0}),
+          max: new fields.NumberField({required: true, nullable: false, integer: true, initial: 4, min: 0})
+        }),
+        pressure: new fields.NumberField({
+          required: true, nullable: false, integer: true, initial: 0, min: 0, max: 4
         })
       }),
       notes: new fields.HTMLField({required: true, nullable: false, initial: ""})

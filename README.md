@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.6 — Task Action Receiver Fix
+## Version 0.0.7 — Secondary Attributes and Collapsible Skill Tree
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -51,3 +51,17 @@ Foundry invokes registered sheet actions with the Actor sheet instance as `this`
 Private static helpers cannot be called as `this.#helper()` from that receiver.
 The Task action now invokes helpers through the class and passes the sheet
 instance explicitly to the Skill Pool roller.
+
+
+## v0.0.7 sheet behavior
+
+The Actor sheet now places HP, MP, and Pressure after Attributes and before
+Skills. Pressure uses compact minus/value/plus controls and is automatically
+subtracted from Effective Skill on Skill Pool rolls.
+
+Skills are Attribute-agnostic in the interface. Task labels do not display
+suggested Attributes, and each ordinary roll requires an explicit selection
+from all six Current Attributes.
+
+Skill branches can be expanded or collapsed. Expansion state is stored per
+Foundry user and per Actor.
