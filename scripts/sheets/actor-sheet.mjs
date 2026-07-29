@@ -79,6 +79,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       taskDetails: AetherchromeActorSheet.#onTaskDetails,
       pressureDecrease: AetherchromeActorSheet.#onPressureDecrease,
       pressureIncrease: AetherchromeActorSheet.#onPressureIncrease,
+      hpDecrease: AetherchromeActorSheet.#onHpDecrease,
+      hpIncrease: AetherchromeActorSheet.#onHpIncrease,
+      mpDecrease: AetherchromeActorSheet.#onMpDecrease,
+      mpIncrease: AetherchromeActorSheet.#onMpIncrease,
+      openEffortDialog: AetherchromeActorSheet.#onOpenEffortDialog,
       toggleSkillBranch: AetherchromeActorSheet.#onToggleSkillBranch,
       expandAllSkills: AetherchromeActorSheet.#onExpandAllSkills,
       collapseAllSkills: AetherchromeActorSheet.#onCollapseAllSkills
@@ -90,6 +95,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   };
 
   async _prepareContext(options) {
+    await this.#normalizeDerivedResources();
     const context = await super._prepareContext(options);
     const expansion = await this.#getSkillExpansion();
     const allRows = flattenTree(buildTree(this.actor));
@@ -122,8 +128,70 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       })),
       skillRows,
       pressureAtMinimum: Number(this.actor.system.resources.pressure ?? 0) <= 0,
-      pressureAtMaximum: Number(this.actor.system.resources.pressure ?? 0) >= 4
+      pressureAtMaximum: Number(this.actor.system.resources.pressure ?? 0) >= 4,
+      hp: this.#resourceContext("health"),
+      mp: this.#resourceContext("magic"),
+      openSkillEffortPending: Boolean(this.actor.system.resources.effort?.openSkill),
+      activeDefenseEffortPending: Boolean(this.actor.system.resources.effort?.activeDefense)
     }, { inplace: false });
+  }
+
+  #resourceContext(resourceKey) {
+    const isHealth = resourceKey === "health";
+    const attributeKey = isHealth ? "health" : "essence";
+    const maximum = Math.max(0, Number(this.actor.system.attributes[attributeKey]?.base ?? 0));
+    const storedValue = Number(this.actor.system.resources[resourceKey]?.value ?? maximum);
+    const minimum = -5 * maximum;
+    const value = Math.max(minimum, Math.min(maximum, storedValue));
+
+    let state = "normal";
+    let threshold = null;
+
+    if (isHealth) {
+      if (value <= 0) {
+        state = "danger";
+        threshold = 0;
+      }
+      if (maximum > 0 && value < -maximum) {
+        const interval = Math.floor((Math.abs(value) - 1) / maximum);
+        state = "critical";
+        threshold = interval;
+      }
+    } else if (value < 0) {
+      state = "warning";
+      threshold = 0;
+    }
+
+    return {
+      value,
+      maximum,
+      minimum,
+      state,
+      threshold,
+      atMinimum: value <= minimum,
+      atMaximum: value >= maximum
+    };
+  }
+
+  async #normalizeDerivedResources() {
+    const hp = this.#resourceContext("health");
+    const mp = this.#resourceContext("magic");
+    const update = {};
+
+    if (Number(this.actor.system.resources.health?.max ?? -1) !== hp.maximum) {
+      update["system.resources.health.max"] = hp.maximum;
+    }
+    if (Number(this.actor.system.resources.magic?.max ?? -1) !== mp.maximum) {
+      update["system.resources.magic.max"] = mp.maximum;
+    }
+    if (Number(this.actor.system.resources.health?.value ?? hp.maximum) !== hp.value) {
+      update["system.resources.health.value"] = hp.value;
+    }
+    if (Number(this.actor.system.resources.magic?.value ?? mp.maximum) !== mp.value) {
+      update["system.resources.magic.value"] = mp.value;
+    }
+
+    if (Object.keys(update).length) await this.actor.update(update);
   }
 
   async #getSkillExpansion() {
@@ -132,11 +200,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
     if (Array.isArray(actorExpansion)) return new Set(actorExpansion);
 
-    const rootIds = SKILL_CATALOG
-      .filter(skill => !skill.parentId)
-      .map(skill => skill.id);
-
-    return new Set(rootIds);
+    return new Set();
   }
 
   async #setSkillExpansion(expansion) {
@@ -153,6 +217,115 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     await roll.toMessage({
       speaker: ChatMessage.getSpeaker({ actor: this.actor }),
       flavor: `${this.actor.name}: Aetherchrome diagnostic d10`
+    });
+  }
+
+  static async #adjustResource(sheet, resourceKey, delta) {
+    const context = sheet.#resourceContext(resourceKey);
+    const next = Math.max(context.minimum, Math.min(context.maximum, context.value + delta));
+    await sheet.actor.update({[`system.resources.${resourceKey}.value`]: next});
+  }
+
+  static async #onHpDecrease(event) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustResource(this, "health", -1);
+  }
+
+  static async #onHpIncrease(event) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustResource(this, "health", 1);
+  }
+
+  static async #onMpDecrease(event) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustResource(this, "magic", -1);
+  }
+
+  static async #onMpIncrease(event) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustResource(this, "magic", 1);
+  }
+
+  static async #onOpenEffortDialog(event) {
+    event.preventDefault();
+
+    const content = `
+      <form class="aec-effort-dialog">
+        <p><strong>Current MP:</strong> ${this.#resourceContext("magic").value}</p>
+
+        <fieldset>
+          <legend>Open Skill Effort — 1 MP</legend>
+          <p>Apply +1 Effective Skill to the next eligible Open Skill roll.</p>
+          <button type="button" data-effort="openSkill">Spend 1 MP</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Active Defense Effort — 1 MP</legend>
+          <p>Ignore Pressure penalties on the next eligible Active Defense.</p>
+          <button type="button" data-effort="activeDefense">Spend 1 MP</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Specified-Cost Activation — Variable MP</legend>
+          <label>
+            <span>Amount</span>
+            <input name="amount" type="number" min="1" step="1" value="1">
+          </label>
+          <label>
+            <span>Source or note</span>
+            <input name="note" type="text" value="">
+          </label>
+          <button type="button" data-effort="variable">Spend MP</button>
+        </fieldset>
+      </form>
+    `;
+
+    await DialogV2.wait({
+      window: { title: `${this.actor.name}: Effort` },
+      content,
+      buttons: [{action: "close", label: "Close", default: true}],
+      render: (_event, dialog) => {
+        const form = dialog.element.querySelector("form");
+        form?.querySelectorAll("[data-effort]").forEach(button => {
+          button.addEventListener("click", async clickEvent => {
+            clickEvent.preventDefault();
+
+            const effort = button.dataset.effort;
+            const live = this.#resourceContext("magic");
+            let cost = 1;
+            let note = "";
+
+            if (effort === "variable") {
+              cost = Math.max(1, Number(form.elements.amount.value) || 1);
+              note = String(form.elements.note.value ?? "").trim();
+            }
+
+            const nextMp = live.value - cost;
+            if (nextMp < live.minimum) {
+              ui.notifications.warn(`MP cannot fall below ${live.minimum} in this Alpha tracker.`);
+              return;
+            }
+
+            const update = {"system.resources.magic.value": nextMp};
+            if (effort === "openSkill") update["system.resources.effort.openSkill"] = true;
+            if (effort === "activeDefense") update["system.resources.effort.activeDefense"] = true;
+
+            await this.actor.update(update);
+
+            const label = effort === "openSkill"
+              ? "Open Skill Effort"
+              : effort === "activeDefense"
+                ? "Active Defense Effort"
+                : "Specified-Cost Activation";
+
+            const suffix = note ? ` — ${foundry.utils.escapeHTML(note)}` : "";
+            ui.notifications.info(`${label}: spent ${cost} MP${suffix}. Current MP ${nextMp}.`);
+            this.render();
+          });
+        });
+      },
+      modal: true,
+      rejectClose: false
     });
   }
 
@@ -373,7 +546,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
     const attribute = Math.max(0, Number(sheet.actor.system.attributes[attributeKey].current ?? 0));
     const pressure = Math.max(0, Math.min(4, Number(sheet.actor.system.resources.pressure ?? 0)));
-    const effectiveSkill = Math.max(0, baseSkill + modifier - pressure);
+    const effortBonus = sheet.actor.system.resources.effort?.openSkill ? 1 : 0;
+    const effectiveSkill = Math.max(0, baseSkill + modifier + effortBonus - pressure);
     const isChanceDie = effectiveSkill === 0;
     const threshold = isChanceDie ? chanceThreshold(attribute) : attribute;
     const diceCount = isChanceDie ? 1 : effectiveSkill;
@@ -398,6 +572,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Skill</span><strong>${foundry.utils.escapeHTML(skill.name)} ${baseSkill}</strong>
           <span>Attribute</span><strong>${attributeDefinition.abbreviation} ${attribute}</strong>
           <span>Situational Modifier</span><strong>${signedNumber(modifier)}</strong>
+          <span>Effort</span><strong>${signedNumber(effortBonus)}</strong>
           <span>Pressure</span><strong>−${pressure}</strong>
           <span>Effective Skill</span><strong>${effectiveSkill}</strong>
           <span>Difficulty</span><strong>${difficulty}</strong>
@@ -410,10 +585,20 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       </article>
     `;
 
-    await roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: sheet.actor }),
-      flavor: `${sheet.actor.name} — ${skill.name}: ${task.name}`,
-      content
-    });
+    const rollMode = game.settings.get("core", "rollMode");
+    await roll.toMessage(
+      {
+        speaker: ChatMessage.getSpeaker({ actor: sheet.actor }),
+        flavor: `${sheet.actor.name} — ${skill.name}: ${task.name}`,
+        content
+      },
+      {
+        messageMode: rollMode
+      }
+    );
+
+    if (effortBonus > 0) {
+      await sheet.actor.update({"system.resources.effort.openSkill": false});
+    }
   }
 }

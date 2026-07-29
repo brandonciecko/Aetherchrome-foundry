@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome",
-  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.7 adds Attribute-agnostic Skill rolls, Secondary Attributes, Pressure automation, and a collapsible Skill Tree.",
-  "version": "0.0.7",
+  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.8 adds derived HP/MP, resource controls, Effort spending, threshold states, collapsed Skill Trees, and roll-mode-aware Skill Pool chat messages.",
+  "version": "0.0.8",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -42,7 +42,7 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.7/aetherchrome-v0.0.7.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.8/aetherchrome-v0.0.8.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md"

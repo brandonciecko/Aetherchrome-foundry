@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.7 — Secondary Attributes and Collapsible Skill Tree
+## Version 0.0.8 — Resource Controls, Effort, and Roll Modes
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -65,3 +65,19 @@ from all six Current Attributes.
 
 Skill branches can be expanded or collapsed. Expansion state is stored per
 Foundry user and per Actor.
+
+
+## v0.0.8 behavior
+
+Maximum HP is derived from Base HLT and Maximum MP from Base ESS. New Actors
+start at those maxima. HP and MP use compact decrement/value/increment controls
+and are bounded in this Alpha tracker from negative five times maximum through
+maximum.
+
+The Effort dialog supports the current Alpha MP expenditure categories. Open
+Skill Effort is consumed by the next Skill Pool roll. Active Defense Effort is
+recorded as pending until Active Defense automation is implemented.
+
+Skill Pool messages attach the evaluated Foundry Roll and honor the current
+core Roll Mode. Skill Trees start fully collapsed for users without saved
+expansion state.

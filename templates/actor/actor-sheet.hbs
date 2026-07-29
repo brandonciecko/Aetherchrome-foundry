@@ -34,33 +34,35 @@
   <section class="aec-panel aec-secondary-attributes">
     <div class="aec-section-heading">
       <h2>{{localize "AETHERCHROME.SecondaryAttributes"}}</h2>
-      <span>Live resources and current Pressure</span>
+      <span>Derived maxima and live resources</span>
     </div>
+
     <div class="aec-secondary-grid">
-      <div class="aec-secondary-resource">
+      <div class="aec-resource-stepper aec-resource-{{hp.state}}">
         <strong>HP</strong>
-        <label>
-          <span>{{localize "AETHERCHROME.Current"}}</span>
-          <input name="system.resources.health.value" type="number" value="{{system.resources.health.value}}" {{disabled (not editable)}}>
-        </label>
-        <span class="aec-slash">/</span>
-        <label>
-          <span>{{localize "AETHERCHROME.Maximum"}}</span>
-          <input name="system.resources.health.max" type="number" value="{{system.resources.health.max}}" min="0" {{disabled (not editable)}}>
-        </label>
+        <button type="button" data-action="hpDecrease" aria-label="Decrease HP" {{disabled hp.atMinimum}}>
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <output aria-label="Current and Maximum HP">{{hp.value}} / {{hp.maximum}}</output>
+        <button type="button" data-action="hpIncrease" aria-label="Increase HP" {{disabled hp.atMaximum}}>
+          <i class="fa-solid fa-plus"></i>
+        </button>
       </div>
 
-      <div class="aec-secondary-resource">
+      <div class="aec-resource-stepper aec-resource-{{mp.state}}">
         <strong>MP</strong>
-        <label>
-          <span>{{localize "AETHERCHROME.Current"}}</span>
-          <input name="system.resources.magic.value" type="number" value="{{system.resources.magic.value}}" min="0" {{disabled (not editable)}}>
-        </label>
-        <span class="aec-slash">/</span>
-        <label>
-          <span>{{localize "AETHERCHROME.Maximum"}}</span>
-          <input name="system.resources.magic.max" type="number" value="{{system.resources.magic.max}}" min="0" {{disabled (not editable)}}>
-        </label>
+        <button type="button" data-action="mpDecrease" aria-label="Decrease MP" {{disabled mp.atMinimum}}>
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <output aria-label="Current and Maximum MP">{{mp.value}} / {{mp.maximum}}</output>
+        <button type="button" data-action="mpIncrease" aria-label="Increase MP" {{disabled mp.atMaximum}}>
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <button type="button" class="aec-effort-button" data-action="openEffortDialog">
+          Effort
+          {{#if openSkillEffortPending}}<span title="Open Skill Effort pending">S</span>{{/if}}
+          {{#if activeDefenseEffortPending}}<span title="Active Defense Effort pending">D</span>{{/if}}
+        </button>
       </div>
 
       <div class="aec-pressure-control">

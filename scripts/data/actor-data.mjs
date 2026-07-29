@@ -73,6 +73,10 @@ export class AetherchromeActorData extends foundry.abstract.TypeDataModel {
         }),
         pressure: new fields.NumberField({
           required: true, nullable: false, integer: true, initial: 0, min: 0, max: 4
+        }),
+        effort: new fields.SchemaField({
+          openSkill: new fields.BooleanField({required: true, nullable: false, initial: false}),
+          activeDefense: new fields.BooleanField({required: true, nullable: false, initial: false})
         })
       }),
       notes: new fields.HTMLField({required: true, nullable: false, initial: ""})

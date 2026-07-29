@@ -451,3 +451,80 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v0.0.8: derived resources, thresholds, and Effort */
+
+.aec-resource-stepper {
+  display: grid;
+  grid-template-columns: 1fr 34px minmax(72px, auto) 34px;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem;
+  border: 1px solid var(--color-border-light-secondary);
+}
+
+.aec-resource-stepper button {
+  min-width: 34px;
+  margin: 0;
+  padding: 0.35rem;
+}
+
+.aec-resource-stepper output {
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  border: 1px solid var(--color-border-light-secondary);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.aec-resource-warning {
+  outline: 2px solid rgba(180, 120, 0, 0.65);
+}
+
+.aec-resource-danger {
+  outline: 2px solid rgba(170, 45, 45, 0.75);
+}
+
+.aec-resource-critical {
+  outline: 3px double rgba(120, 0, 0, 0.9);
+  font-weight: 700;
+}
+
+.aec-effort-button {
+  grid-column: 1 / -1;
+  width: auto;
+  justify-self: stretch;
+}
+
+.aec-effort-button span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.4em;
+  margin-left: 0.25rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.7rem;
+}
+
+.aec-effort-dialog {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.aec-effort-dialog fieldset {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.65rem;
+}
+
+.aec-effort-dialog fieldset p {
+  margin: 0;
+}
+
+.aec-effort-dialog label {
+  display: grid;
+  gap: 0.25rem;
+}

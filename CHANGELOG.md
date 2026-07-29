@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.0.8 — 2026-07-29
+
+### Added
+
+- Derived Maximum HP from Base HLT.
+- Derived Maximum MP from Base ESS.
+- Compact HP and MP decrement/value/increment controls.
+- Alpha Foundry tracking floor of negative five times each resource maximum.
+- Visual HP states at 0 and negative Health intervals.
+- Visual MP warning below 0.
+- Effort popup beside MP.
+- Open Skill Effort, Active Defense Effort, and specified-cost MP spending.
+- Pending Open Skill and Active Defense Effort indicators.
+- Foundry roll-mode-aware Skill Pool chat messages.
+
+### Changed
+
+- New Skill Trees start fully collapsed.
+- Skill Tree expansion state remains per-user and per-Actor after interaction.
+- Skill Pool chat output now attaches the evaluated Roll and honors Public, GM, Blind, and Self roll modes.
+- Open Skill Effort is consumed by the next Skill Pool roll and adds +1 Effective Skill.
+- HP and MP maxima are synchronized from Base HLT and Base ESS.
+
+### Deferred
+
+- Automatic Incapacitation, Death, and Comatose procedures.
+- Automatic Active Defense Effort consumption.
+- Item and Equipment documents.
+
 ## 0.0.7 — 2026-07-29
 
 ### Added
