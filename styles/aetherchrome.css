@@ -152,3 +152,69 @@
   position: sticky;
   bottom: 0;
 }
+
+.aec-tree-header,
+.aec-tree-row {
+  display: grid;
+  grid-template-columns: minmax(250px, 1.2fr) 72px minmax(260px, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.aec-tree-header {
+  padding: 0 0.35rem 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.aec-skill-tree {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.aec-tree-row {
+  min-height: 42px;
+  padding: 0.3rem 0.35rem;
+  border-top: 1px solid var(--color-border-light-secondary);
+}
+
+.aec-tree-row:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.aec-tree-skill {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.aec-tree-skill > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.aec-tree-skill small {
+  opacity: 0.68;
+  font-size: 0.72rem;
+}
+
+.aec-tree-branch {
+  opacity: 0.55;
+  font-family: monospace;
+}
+
+.aec-no-tasks {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.aec-sheet-footer {
+  position: static;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.45rem 0;
+  background: var(--background);
+}

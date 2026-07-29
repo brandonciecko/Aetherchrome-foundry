@@ -1,38 +1,37 @@
 # Changelog
 
-## 0.0.2 — 2026-07-29
+## 0.0.3 — 2026-07-29
 
 ### Added
 
-- Six registered Attributes: Strength, Health, Intelligence, Agility, Charisma, and Essence.
-- Separate Base and Current values for each Attribute.
-- Twelve structured Skill record slots.
-- Skill enable state, name, governing Attribute, and Base Skill rating.
-- Actor subtype localization.
-- Expanded Core Actor Record layout.
+- Registered Alpha Skill tree.
+- Parent/child/Specialization presentation.
+- Per-Skill rating records.
+- Skill-filtered Task dropdowns.
+- Typical Attribute labels for Tasks.
+- Separate versioned Skill catalog module.
 
-### Constraints
+### Removed
 
-- Standard Attributes are presented as 1–9.
-- Current Attribute values may reach 0.
-- Base Skill is constrained to 0–10.
+- Twelve generic free-text Skill slots.
+- Skill `Use` checkboxes.
 
-### Deliberately omitted
+### Excluded
 
-- Skill Registry synchronization.
+- Superseded and Deprecated registry records.
+
+### Not yet implemented
+
 - Skill Pool resolution.
-- Chance Die and Overflow Dice procedures.
-- Difficulty handling.
-- Skill defaults and prerequisites.
-- Combat automation.
+- Task detail and requirements display.
+- Defaults and prerequisite enforcement.
+- Parent-rating limits.
+- Registry live synchronization.
+
+## 0.0.2 — 2026-07-29
+
+- Added the six Attributes and generic structured Skill slots.
 
 ## 0.0.1 — 2026-07-29
 
-### Added
-
-- Foundry VTT v14 system manifest.
-- Aetherchrome Actor data model.
-- Minimal `ActorSheetV2` implementation.
-- Health resource and token-bar configuration.
-- Diagnostic d10 chat roll.
-- English localization and baseline styling.
+- Added the Foundry v14 loadable skeleton.

@@ -1,54 +1,30 @@
 # Aetherchrome Foundry VTT System
 
-Native Foundry VTT implementation of **Aetherchrome**.
+## Version 0.0.3 — Skill Tree and Task Selection
 
-## Version 0.0.2 — Core Actor Record
+This Foundry VTT v14 milestone replaces generic Skill slots with the current registered Alpha Skill topology.
 
-This milestone provides:
+### Added
 
-- Foundry VTT v14 system support;
-- one native `actor` Actor subtype;
-- Base and Current values for all six registered Attributes;
-- twelve structured Skill record slots;
-- Skill name, governing Attribute, and Base Skill rating;
-- editable name, concept, health resource, and notes;
-- token-bar access to health;
-- a diagnostic `1d10` chat roll.
+- Hierarchical Skill tree generated from a separate catalog file.
+- Root Skills, child Skills, and Specializations.
+- Base Skill ratings from 0–10 on every registered node.
+- Task dropdowns filtered to the selected Skill node.
+- Typical Task Attribute shown in each dropdown entry.
+- Current Active Working and Provisional Task records.
+- Superseded and Deprecated Skills and Tasks excluded.
+- Non-overlapping sheet footer.
 
-The diagnostic roll is **not** the Aetherchrome Skill Pool mechanic.
+### Data source
 
-## Attribute records
+The catalog was transcribed from `AEC — Skill Registry v0.1` on 2026-07-29. The project registry remains the controlling authority. The included catalog is a versioned snapshot and does not live-sync with Google Sheets.
 
-The sheet records:
+### Deliberately omitted
 
-- Strength (STR)
-- Health (HLT)
-- Intelligence (INT)
-- Agility (AGL)
-- Charisma (CHA)
-- Essence (ESS)
-
-The standard Attribute range is 1–9. Current Attribute may reach 0. Extended Attribute procedures are not automated in this release.
-
-## Skill records
-
-Twelve generic slots are supplied for early testing. Each slot stores:
-
-- enabled state;
-- Skill name;
-- governing Attribute;
-- Base Skill rating from 0–10.
-
-These slots are intentionally generic. They are not yet synchronized with the project Skill Registry.
-
-## Manual development installation
-
-1. Close Foundry VTT.
-2. Copy or clone this repository into `{Foundry user data}/Data/systems/aetherchrome`.
-3. Confirm `system.json` is directly inside that folder.
-4. Start Foundry VTT v14.
-5. Create or open a world using **Aetherchrome**.
-6. Existing v0.0.1 Actors should receive the new schema defaults automatically.
-7. Open an Actor sheet and save Attribute and Skill values.
-
-The folder name must be exactly `aetherchrome`, matching the manifest ID.
+- Skill Pool rolls.
+- Task detail dialogs.
+- Difficulty evaluation.
+- Requirements and item eligibility.
+- Defaults, prerequisites, and parent-rating validation.
+- Chained Task composition.
+- Registry synchronization.

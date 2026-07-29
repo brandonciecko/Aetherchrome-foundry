@@ -27,5 +27,10 @@
   "AETHERCHROME.RollDiagnostic": "Roll Diagnostic d10",
   "AETHERCHROME.DiagnosticNote": "This confirms dice evaluation and chat output. It is not the Skill Pool mechanic.",
   "AETHERCHROME.Notes": "Notes",
-  "AETHERCHROME.Save": "Save"
+  "AETHERCHROME.Save": "Save",
+  "AETHERCHROME.SkillTree": "Skill Tree",
+  "AETHERCHROME.SkillTreeNote": "Registered Alpha topology; ratings 0\u201310",
+  "AETHERCHROME.Task": "Available Task",
+  "AETHERCHROME.SelectTask": "Select Task\u2026",
+  "AETHERCHROME.NoRegisteredTasks": "No registered Tasks"
 }
