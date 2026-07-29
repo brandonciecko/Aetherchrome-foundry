@@ -2,7 +2,7 @@ import { AetherchromeActorData } from "./data/actor-data.mjs";
 import { AetherchromeActorSheet } from "./sheets/actor-sheet.mjs";
 
 Hooks.once("init", () => {
-  console.log("Aetherchrome | Initializing v0.0.1");
+  console.log("Aetherchrome | Initializing");
 
   CONFIG.Actor.dataModels = {
     actor: AetherchromeActorData
@@ -25,5 +25,5 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   console.log("Aetherchrome | Ready");
-  ui.notifications.info("Aetherchrome v0.0.1 loaded.");
+  ui.notifications.info(`Aetherchrome v${game.system.version} loaded.`);
 });

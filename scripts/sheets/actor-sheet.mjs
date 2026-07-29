@@ -227,10 +227,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
     if (!formData) return;
 
-    const attributeKey = String(formData.get("attributeKey"));
-    const modifier = Number(formData.get("modifier")) || 0;
-    const difficulty = Math.max(0, Number(formData.get("difficulty")) || 0);
-    const note = String(formData.get("note") ?? "").trim();
+    const attributeKey = String(formData.attributeKey);
+    const modifier = Number(formData.modifier) || 0;
+    const difficulty = Math.max(0, Number(formData.difficulty) || 0);
+    const note = String(formData.note ?? "").trim();
     await this.#rollSkillPool({skill, task, attributeKey, baseSkill, modifier, difficulty, note});
   }
 
