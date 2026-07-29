@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.4 — Task Details and Skill Pool Roll Dialog
+## Version 0.0.5 — Stable Task Details and Skill Pool Roll Dialog
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -38,3 +38,8 @@ This Foundry VTT v14 milestone adds the first playable implementation of Aetherc
 - Chained Tasks display details but do not roll independently.
 - Requirements are displayed but not mechanically enforced.
 - Damage, Aim, Reactions, Pressure, and Task-specific effects are not automated.
+
+
+## v0.0.5 dialog correction
+
+The Skill Pool dialog now uses a custom `DialogV2.wait` submission callback and reads values from `button.form.elements`. This avoids reliance on helper return-shape behavior and reports unexpected roll errors in the Foundry console.

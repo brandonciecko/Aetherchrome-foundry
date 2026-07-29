@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.0.5 — 2026-07-29
+
+### Fixed
+
+- Replaced fragile Skill Pool dialog result handling with an explicit Foundry v14 `DialogV2.wait` button callback.
+- Read roll fields directly from the submitted dialog form.
+- Added roll error reporting to the Foundry console and UI.
+- Added governing-Attribute validation.
+- Made the login banner read the installed manifest version dynamically.
+
+### Retained
+
+- Task Details.
+- Standard Skill Pool resolution.
+- Chance Die handling.
+- Success, Margin, and Critical Success chat output.
+- Automatic and Chained Task safeguards.
+
 ## 0.0.4 — 2026-07-29
 
 ### Added

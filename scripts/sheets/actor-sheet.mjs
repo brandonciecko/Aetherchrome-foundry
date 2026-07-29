@@ -214,24 +214,57 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       <p class="aec-dialog-note">Contextual and opposed Difficulties default to 1 for data entry only. Set the value required by the applicable Task or opposition procedure.</p>
     `;
 
-    const formData = await DialogV2.input({
+    const formData = await DialogV2.wait({
       window: { title: `${skill.name}: ${task.name}` },
       content,
-      ok: {
-        label: "Roll Skill Pool",
-        icon: "fa-solid fa-dice-d10"
-      },
+      buttons: [
+        {
+          action: "roll",
+          label: "Roll Skill Pool",
+          icon: "fa-solid fa-dice-d10",
+          default: true,
+          callback: (event, button) => {
+            const elements = button.form?.elements;
+            if (!elements) throw new Error("Aetherchrome | Skill Pool dialog form was unavailable.");
+
+            return {
+              attributeKey: elements.attributeKey.value,
+              modifier: elements.modifier.value,
+              difficulty: elements.difficulty.value,
+              note: elements.note.value
+            };
+          }
+        },
+        {
+          action: "cancel",
+          label: "Cancel"
+        }
+      ],
       modal: true,
       rejectClose: false
     });
 
-    if (!formData) return;
+    if (!formData || formData === "cancel") return;
 
-    const attributeKey = String(formData.attributeKey);
-    const modifier = Number(formData.modifier) || 0;
-    const difficulty = Math.max(0, Number(formData.difficulty) || 0);
-    const note = String(formData.note ?? "").trim();
-    await this.#rollSkillPool({skill, task, attributeKey, baseSkill, modifier, difficulty, note});
+    try {
+      const attributeKey = String(formData.attributeKey);
+      const modifier = Number(formData.modifier) || 0;
+      const difficulty = Math.max(0, Number(formData.difficulty) || 0);
+      const note = String(formData.note ?? "").trim();
+
+      await this.#rollSkillPool({
+        skill,
+        task,
+        attributeKey,
+        baseSkill,
+        modifier,
+        difficulty,
+        note
+      });
+    } catch (error) {
+      console.error("Aetherchrome | Skill Pool roll failed", error);
+      ui.notifications.error("Aetherchrome Skill Pool roll failed. Open the Foundry console with F12 for details.");
+    }
   }
 
   static #taskDetailsHtml(skill, task, baseSkill, compact = false) {
@@ -259,7 +292,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
   static async #rollSkillPool({skill, task, attributeKey, baseSkill, modifier, difficulty, note}) {
     const attributeDefinition = ATTRIBUTE_DEFINITIONS.find(entry => entry.key === attributeKey);
-    const attribute = Math.max(0, Number(this.actor.system.attributes[attributeKey]?.current ?? 0));
+    if (!attributeDefinition || !this.actor.system.attributes[attributeKey]) {
+      throw new Error(`Unknown governing Attribute: ${attributeKey}`);
+    }
+
+    const attribute = Math.max(0, Number(this.actor.system.attributes[attributeKey].current ?? 0));
     const effectiveSkill = Math.max(0, baseSkill + modifier);
     const isChanceDie = effectiveSkill === 0;
     const threshold = isChanceDie ? chanceThreshold(attribute) : attribute;
