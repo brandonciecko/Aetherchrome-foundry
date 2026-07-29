@@ -1,0 +1,13 @@
+{
+  "AETHERCHROME.ActorSheet": "Aetherchrome Actor Sheet",
+  "AETHERCHROME.Name": "Actor Name",
+  "AETHERCHROME.Concept": "Concept",
+  "AETHERCHROME.Resources": "Resources",
+  "AETHERCHROME.HealthCurrent": "Current Health",
+  "AETHERCHROME.HealthMaximum": "Maximum Health",
+  "AETHERCHROME.Diagnostics": "Diagnostics",
+  "AETHERCHROME.RollDiagnostic": "Roll Diagnostic d10",
+  "AETHERCHROME.DiagnosticNote": "This confirms dice evaluation and chat output. It is not the Skill Pool mechanic.",
+  "AETHERCHROME.Notes": "Notes",
+  "AETHERCHROME.Save": "Save"
+}
