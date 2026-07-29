@@ -2,7 +2,7 @@
   "id": "aetherchrome",
   "title": "Aetherchrome",
   "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.10 adds the Attack and Damage foundation: weapon attacks, Aim, passive defense, Damage Pools, Armor subtraction, grip modifiers, bow loading, ammunition consumption, and linked roll-mode-aware chat cards.",
-  "background": "systems/aetherchrome/assets/Aetherchrome-alpha banner.webp"
+  "background": "systems/aetherchrome/assets/Aetherchrome-alpha banner.webp",
   "version": "0.0.10",
   "compatibility": {
     "minimum": 14,
