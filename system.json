@@ -1,0 +1,49 @@
+{
+  "id": "aetherchrome",
+  "title": "Aetherchrome",
+  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.2 adds the Core Actor Record.",
+  "version": "0.0.2",
+  "compatibility": {
+    "minimum": 14,
+    "verified": 14,
+    "maximum": 14
+  },
+  "authors": [
+    {
+      "name": "Brandon Ciecko",
+      "url": "https://github.com/brandonciecko/Aetherchrome-foundry"
+    }
+  ],
+  "esmodules": [
+    "scripts/aetherchrome.mjs"
+  ],
+  "styles": [
+    "styles/aetherchrome.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "actor": {}
+    },
+    "Item": {}
+  },
+  "initiative": "1d10",
+  "grid": {
+    "distance": 1,
+    "units": "hex"
+  },
+  "primaryTokenAttribute": "resources.health",
+  "socket": false,
+  "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
+  "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.2/aetherchrome-v0.0.2.zip",
+  "license": "LICENSE",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md"
+}
