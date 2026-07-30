@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.11 — Campaign Profile Architecture
+## Version 0.0.12 — Scene Targeting and Applied Damage
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -127,3 +127,22 @@ accesses campaign configuration through `game.aetherchrome.campaign`.
 The campaign service supplies available Skills, Traits, Items, equipment
 packages, configuration values, module-provider IDs, and explicit campaign
 exceptions. Alpha 0.1 remains the default profile.
+
+
+## Scene combat workflow
+
+To attack another Actor:
+
+1. Place linked tokens for both Actors on an active Scene.
+2. Set the attacker's weapon to Ready.
+3. Use Foundry's target tool, or hover over the defender and press `T`, so exactly
+   one token is targeted.
+4. Open the attacker's sheet and click the crosshair button beside the weapon.
+5. Resolve the Attack dialog.
+
+The system reads the targeted Actor's Agility, calculates Passive Defense,
+finds the highest worn torso Armor value, resolves Aim and Damage, and can
+subtract net HP Damage directly from the target.
+
+Active Defense, Shield Block, Called Shot, and full hit-location automation are
+not included in this milestone.

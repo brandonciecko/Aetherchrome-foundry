@@ -766,3 +766,15 @@
   text-transform: uppercase;
   opacity: 0.8;
 }
+
+
+/* v0.0.12: Scene target attack workflow */
+.aec-attack-dialog input[readonly] {
+  opacity: 0.82;
+}
+
+.aec-attack-dialog .aec-checkbox-row {
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}

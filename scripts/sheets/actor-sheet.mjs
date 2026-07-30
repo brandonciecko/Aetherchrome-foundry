@@ -489,6 +489,38 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     await AetherchromeActorSheet.#adjustItemResource(this, target, 1);
   }
 
+  static #getSingleTarget() {
+    const targets = Array.from(game.user.targets ?? []);
+    if (targets.length !== 1) return null;
+    return targets[0];
+  }
+
+  static #torsoArmor(actor) {
+    const armorSources = actor.items
+      .filter(item => item.type === "armor" && item.system.worn)
+      .filter(item => {
+        const coverage = String(item.system.coverage ?? "").toLowerCase();
+        return coverage.includes("torso") || coverage.includes("body") || coverage.includes("all");
+      })
+      .map(item => ({
+        name: item.name,
+        value: Math.max(0, Number(item.system.itemRating ?? 0))
+      }));
+
+    if (!armorSources.length) return {value: 0, source: "None"};
+
+    armorSources.sort((a, b) => b.value - a.value);
+    return {
+      value: armorSources[0].value,
+      source: armorSources[0].name
+    };
+  }
+
+  static #tokenForActor(actor) {
+    if (!canvas?.ready) return null;
+    return canvas.tokens.placeables.find(token => token.actor?.id === actor.id) ?? null;
+  }
+
   static #attributeOptions(sheet, selectedKey = "") {
     return ATTRIBUTE_DEFINITIONS.map(attribute => {
       const current = Number(sheet.actor.system.attributes[attribute.key]?.current ?? 0);
@@ -579,6 +611,25 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const weapon = AetherchromeActorSheet.#embeddedItem(this, target);
     if (!weapon || weapon.type !== "weapon") return;
 
+    const targetToken = AetherchromeActorSheet.#getSingleTarget();
+    if (!targetToken?.actor) {
+      ui.notifications.warn("Target exactly one Actor token before attacking.");
+      return;
+    }
+
+    if (targetToken.actor.id === this.actor.id) {
+      ui.notifications.warn("The attacker cannot target itself with this attack workflow.");
+      return;
+    }
+
+    const targetActor = targetToken.actor;
+    const targetName = targetToken.name || targetActor.name;
+    const targetAgility = Math.max(
+      0,
+      Number(targetActor.system.attributes?.agility?.current ?? 0)
+    );
+    const torsoArmor = AetherchromeActorSheet.#torsoArmor(targetActor);
+
     if (!weapon.system.ready) {
       ui.notifications.warn(`${weapon.name} is not Ready.`);
       return;
@@ -592,6 +643,19 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     }
 
     const isBow = String(weapon.system.registryId ?? "").includes("BOW");
+    const attackerToken = AetherchromeActorSheet.#tokenForActor(this.actor);
+    let measuredDistance = 1;
+    if (isBow && attackerToken && targetToken && canvas?.grid) {
+      try {
+        const ray = new foundry.canvas.geometry.Ray(attackerToken.center, targetToken.center);
+        measuredDistance = Math.max(
+          1,
+          Math.ceil((ray.distance / canvas.grid.size) * canvas.grid.distance)
+        );
+      } catch (_error) {
+        measuredDistance = 1;
+      }
+    }
     const defaultAttackAttribute = "agility";
     const defaultDamageAttribute = String(weapon.system.damageAttribute ?? "strength");
     const skillOptions = AetherchromeActorSheet.#skillOptions(this, weapon);
@@ -613,14 +677,14 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <label><span>Situational Modifier</span><input name="modifier" type="number" value="0" step="1"></label>
           <label><span>Take Aim / other Effective Skill bonus</span><input name="aimBonus" type="number" value="0" step="1"></label>
           ${isBow ? `
-          <label><span>Distance in hexes</span><input name="distance" type="number" value="1" min="1" step="1"></label>
+          <label><span>Distance in hexes</span><input name="distance" type="number" value="${measuredDistance}" min="1" step="1"></label>
           ` : `<input name="distance" type="hidden" value="0">`}
         </fieldset>
 
         <fieldset>
           <legend>Target and Aim</legend>
-          <label><span>Target name</span><input name="targetName" type="text" value="Target"></label>
-          <label><span>Target Attribute value</span><input name="targetAttribute" type="number" value="4" min="0" step="1"></label>
+          <label><span>Target</span><input name="targetName" type="text" value="${foundry.utils.escapeHTML(targetName)}" readonly></label>
+          <label><span>Target Agility</span><input name="targetAttribute" type="number" value="${targetAgility}" readonly></label>
           <label><span>Cover modifier to Passive Defense</span><input name="cover" type="number" value="0" min="0" max="2" step="1"></label>
           <label><span>Active Defense Aim adjustment</span>
             <input name="defenseAdjustment" type="number" value="0" step="1">
@@ -633,7 +697,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <label><span>Damage Attribute</span>
             <select name="damageAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultDamageAttribute)}</select>
           </label>
-          <label><span>Final Armor at struck location</span><input name="armor" type="number" value="0" min="0" step="1"></label>
+          <label><span>Torso Armor</span><input name="armor" type="number" value="${torsoArmor.value}" min="0" step="1"></label>
+          <label><span>Armor source</span><input type="text" value="${foundry.utils.escapeHTML(torsoArmor.source)}" readonly></label>
+          <label class="aec-checkbox-row">
+            <input name="applyDamage" type="checkbox" checked>
+            <span>Apply resulting HP Damage to the targeted Actor</span>
+          </label>
           <label><span>Explicit Damage Pool modifier</span><input name="damageModifier" type="number" value="0" step="1"></label>
           <label class="aec-checkbox-row">
             <input name="twoHanded" type="checkbox" ${String(weapon.system.grip ?? "").includes("Two-handed") ? "checked" : ""}>
@@ -665,6 +734,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
               defenseAdjustment: Number(form.elements.defenseAdjustment.value) || 0,
               damageAttribute: form.elements.damageAttribute.value,
               armor: Math.max(0, Number(form.elements.armor.value) || 0),
+              applyDamage: Boolean(form.elements.applyDamage.checked),
               damageModifier: Number(form.elements.damageModifier.value) || 0,
               twoHanded: Boolean(form.elements.twoHanded.checked)
             };
@@ -726,6 +796,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       <section class="aec-chat-card aec-attack-card">
         <h3>${foundry.utils.escapeHTML(this.actor.name)} attacks ${foundry.utils.escapeHTML(result.targetName)}</h3>
         <div class="aec-chat-grid">
+          <span>Target Token</span><strong>${foundry.utils.escapeHTML(targetName)}</strong>
+          <span>Target Actor</span><strong>${foundry.utils.escapeHTML(targetActor.name)}</strong>
           <span>Weapon</span><strong>${foundry.utils.escapeHTML(weapon.name)}</strong>
           <span>Skill</span><strong>${foundry.utils.escapeHTML(skill.name)} ${skillRating}</strong>
           <span>Attack Attribute</span><strong>${attackThreshold}</strong>
@@ -769,6 +841,22 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     }
 
     const hpDamage = Math.max(0, damageSuccesses - result.armor);
+    const hpBefore = Number(targetActor.system.resources?.health?.value ?? 0);
+    let hpAfter = hpBefore;
+    let damageApplied = false;
+
+    if (result.applyDamage && hpDamage > 0) {
+      if (!targetActor.isOwner && !game.user.isGM) {
+        ui.notifications.warn(
+          `You do not have permission to apply damage to ${targetActor.name}. Damage was rolled but not applied.`
+        );
+      } else {
+        hpAfter = hpBefore - hpDamage;
+        await targetActor.update({"system.resources.health.value": hpAfter});
+        damageApplied = true;
+      }
+    }
+
     const damageContent = `
       <section class="aec-chat-card aec-damage-card">
         <h3>Damage from ${foundry.utils.escapeHTML(weapon.name)}</h3>
@@ -784,6 +872,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Damage Successes</span><strong>${damageSuccesses}</strong>
           <span>Final Armor</span><strong>${result.armor}</strong>
           <span>HP Damage</span><strong>${hpDamage}</strong>
+          <span>Applied to target</span><strong>${damageApplied ? "Yes" : "No"}</strong>
+          <span>Target HP</span><strong>${damageApplied ? `${hpBefore} → ${hpAfter}` : hpBefore}</strong>
         </div>
       </section>
     `;
@@ -805,6 +895,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       };
       ChatMessage.applyRollMode(messageData, rollMode);
       await ChatMessage.create(messageData);
+    }
+
+    if (damageApplied) {
+      ui.notifications.info(`${targetActor.name} takes ${hpDamage} HP Damage.`);
     }
 
     if (ammoCapacity > 0) {

@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.0.12 — 2026-07-29
+
+### Added
+
+- Foundry Scene token targeting in the Weapon Attack workflow.
+- Requirement to target exactly one Actor token.
+- Automatic target name and Actor resolution.
+- Target Agility read directly from the targeted Actor.
+- Passive Defense calculated from the targeted Actor instead of manual target data.
+- Automatic torso Armor lookup from worn Armor Items.
+- Highest applicable persistent Armor value used when multiple worn Armor Items cover the torso.
+- Approximate bow distance prefilled from attacker and target token positions.
+- Optional direct HP Damage application to the targeted Actor.
+- Ownership and GM permission checking before target HP is updated.
+- Target HP before-and-after values in the Damage chat card.
+
+### Current workflow
+
+1. Place two linked Actor tokens on a Scene.
+2. Ready the attacker's weapon.
+3. Target the defender with Foundry's Target tool or `T`.
+4. Open the attacker's Actor sheet.
+5. Click the Weapon Attack control.
+6. Resolve the Attack and Damage dialog.
+7. Apply net HP Damage to the targeted Actor when permitted.
+
+### Rule boundaries
+
+- Normal attacks target the torso.
+- Current standard attacks use target Agility for Passive Defense.
+- Active Defense remains a manual Aim adjustment.
+- Cover remains manually selected.
+- Torso Armor may be manually overridden in the attack dialog.
+- Shield Block Armor and hit-location selection remain deferred.
+- Automatic range measurement is a convenience value and may be manually corrected.
+
 ## 0.0.11 — 2026-07-29
 
 ### Added
