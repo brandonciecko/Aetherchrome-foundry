@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.0.20 — 2026-07-29
+
+### Combat Core synchronization
+
+- Initial Aim now equals Attack successes minus Passive Defense plus 1.
+- Negative Final Aim no longer reduces the weapon Item Rating contribution.
+- Damage Pool now equals weapon Item Rating contribution plus max(Final Aim, 0), plus explicit modifiers, minimum 0.
+- Added Heavy Blow as a Chained combat Task:
+  - requires an eligible melee Attack;
+  - replaces the Attack Attribute with Strength;
+  - doubles only the weapon Item Rating contribution;
+  - gains 1 Pressure after the complete Attack resolves.
+- Added Called Shot as a Chained combat Task:
+  - selects one legal humanoid hit Location other than Torso;
+  - applies an Effective Skill penalty equal to Location Depth;
+  - changes the struck Location;
+  - gains 2 Pressure after the complete Attack resolves.
+- Heavy Blow and Called Shot may be combined as Called Heavy Blow and gain 3 Pressure after resolution.
+- Chained Pressure is capped by the Alpha Pressure Cap of 4 and does not modify the generating Attack.
+- Attack and Damage chat cards now expose Chained Tasks, targeted Location, Initial Aim formula, Item Rating contribution, and nonnegative Aim contribution.
+
+### Current limitations
+
+- Armor at a Called Shot Location remains a manually entered value; automatic per-Location Armor lookup is deferred.
+- Location Injury allocation and cascading are not yet automated by the Attack workflow.
+- Active Defense remains local-client rather than socket-routed.
+
 ## 0.0.19 — 2026-07-29
 
 ### Added

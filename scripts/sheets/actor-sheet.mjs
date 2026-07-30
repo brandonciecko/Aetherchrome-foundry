@@ -30,6 +30,25 @@ const STATUS_CATALOG = [
 ];
 
 
+const HUMANOID_LOCATIONS = [
+  {name: "Torso", depth: 0},
+  {name: "Neck", depth: 1},
+  {name: "Left Arm", depth: 1},
+  {name: "Right Arm", depth: 1},
+  {name: "Left Leg", depth: 1},
+  {name: "Right Leg", depth: 1},
+  {name: "Head", depth: 2},
+  {name: "Left Hand", depth: 2},
+  {name: "Right Hand", depth: 2},
+  {name: "Left Foot", depth: 2},
+  {name: "Right Foot", depth: 2},
+  {name: "Skull", depth: 3},
+  {name: "Face", depth: 3},
+  {name: "Left Eye", depth: 4},
+  {name: "Right Eye", depth: 4}
+];
+
+
 
 function dataKey(skillId) {
   return skillId.toLowerCase().replace("skl-", "").replaceAll("-", "_");
@@ -1151,6 +1170,13 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     return canvas.tokens.placeables.find(token => token.actor?.id === actor.id) ?? null;
   }
 
+  static #locationOptions(selected = "Torso") {
+    return HUMANOID_LOCATIONS.map(location => {
+      const isSelected = location.name === selected ? " selected" : "";
+      return `<option value="${foundry.utils.escapeHTML(location.name)}" data-depth="${location.depth}"${isSelected}>${foundry.utils.escapeHTML(location.name)} — Depth ${location.depth}</option>`;
+    }).join("");
+  }
+
   static #attributeOptions(sheet, selectedKey = "") {
     return ATTRIBUTE_DEFINITIONS.map(attribute => {
       const current = Number(sheet.actor.system.attributes[attribute.key]?.current ?? 0);
@@ -1457,6 +1483,22 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         </fieldset>
 
         <fieldset>
+          <legend>Chained Combat Tasks</legend>
+          <label class="aec-checkbox-row">
+            <input name="heavyBlow" type="checkbox" ${isBow ? "disabled" : ""}>
+            <span>Heavy Blow — use Strength, double weapon Item Rating contribution, gain 1 Pressure</span>
+          </label>
+          <label class="aec-checkbox-row">
+            <input name="calledShot" type="checkbox">
+            <span>Called Shot — target another Location, apply its Location-distance Effective Skill penalty, gain 2 Pressure</span>
+          </label>
+          <label><span>Targeted Location</span>
+            <select name="targetLocation">${AetherchromeActorSheet.#locationOptions("Torso")}</select>
+          </label>
+          <p class="aec-dialog-note">Heavy Blow and Called Shot may be combined. Pressure is gained only after the complete Attack resolves.</p>
+        </fieldset>
+
+        <fieldset>
           <legend>Target and Aim</legend>
           <label><span>Target</span><input name="targetName" type="text" value="${foundry.utils.escapeHTML(targetName)}" readonly></label>
           <label><span>Target Agility</span><input name="targetAttribute" type="number" value="${targetAgility}" readonly></label>
@@ -1469,7 +1511,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <label><span>Damage Attribute</span>
             <select name="damageAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultDamageAttribute)}</select>
           </label>
-          <label><span>Torso Armor</span><input name="armor" type="number" value="${torsoArmor.value}" min="0" step="1"></label>
+          <label><span>Armor at targeted Location</span><input name="armor" type="number" value="${torsoArmor.value}" min="0" step="1"></label>
           <label><span>Armor source</span><input type="text" value="${foundry.utils.escapeHTML(torsoArmor.source)}" readonly></label>
           <label class="aec-checkbox-row">
             <input name="applyDamage" type="checkbox" checked>
@@ -1516,6 +1558,9 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
               targetName: String(form.elements.targetName.value || "Target"),
               targetAttribute: Math.max(0, Number(form.elements.targetAttribute.value) || 0),
               cover: Math.max(0, Number(form.elements.cover.value) || 0),
+              heavyBlow: Boolean(form.elements.heavyBlow.checked),
+              calledShot: Boolean(form.elements.calledShot.checked),
+              targetLocation: String(form.elements.targetLocation.value || "Torso"),
               damageAttribute: form.elements.damageAttribute.value,
               armor: Math.max(0, Number(form.elements.armor.value) || 0),
               applyDamage: Boolean(form.elements.applyDamage.checked),
@@ -1565,12 +1610,25 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       return;
     }
 
+    const targetLocation = HUMANOID_LOCATIONS.find(
+      location => location.name === result.targetLocation
+    ) ?? HUMANOID_LOCATIONS[0];
+    if (result.calledShot && targetLocation.name === "Torso") {
+      ui.notifications.warn("Called Shot requires a legal Location other than the base Attack's default Torso.");
+      return;
+    }
+    if (result.heavyBlow && isBow) {
+      ui.notifications.warn("Heavy Blow requires an eligible melee Attack.");
+      return;
+    }
+
     const skillRating = Math.max(0, Number(this.actor.system.skillTree[dataKey(skill.id)]?.rating ?? 0));
     const taskAttributeCode = String(attackTask.typicalAttribute ?? "AGL").split("/")[0];
-    const taskAttributeKey = {
+    const registeredAttributeKey = {
       STR: "strength", HLT: "health", INT: "intelligence",
       AGL: "agility", CHA: "charisma", ESS: "essence"
     }[taskAttributeCode] ?? result.attackAttribute;
+    const taskAttributeKey = result.heavyBlow ? "strength" : registeredAttributeKey;
     const attackThreshold = Math.max(0, Number(this.actor.system.attributes[taskAttributeKey]?.current ?? 0));
     const pressure = Math.max(0, Number(this.actor.system.resources.pressure ?? 0));
     const effortBonus = this.actor.system.resources.effort?.openSkill ? 1 : 0;
@@ -1593,10 +1651,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       rangeModifier = -(Math.max(1, rangeIncrement) - 1);
     }
 
+    const calledShotModifier = result.calledShot ? -targetLocation.depth : 0;
     const effectiveSkill = Math.max(
       0,
       skillRating + result.modifier + result.aimBonus + rangeModifier + effortBonus
-        - pressure - attackStatusModifiers.total
+        + calledShotModifier - pressure - attackStatusModifiers.total
     );
     const chanceDie = effectiveSkill === 0;
     const attackDice = chanceDie ? 1 : effectiveSkill;
@@ -1604,7 +1663,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const attackRoll = await new Roll(`${attackDice}d10`).evaluate();
     const attackSuccesses = AetherchromeActorSheet.#countSuccesses(attackRoll, attackSuccessThreshold);
     const passiveDefense = Math.ceil(result.targetAttribute / 2) + result.cover;
-    const initialAim = attackSuccesses - passiveDefense;
+    const initialAim = attackSuccesses - passiveDefense + 1;
     const defense = await AetherchromeActorSheet.#promptActiveDefense(
       targetActor,
       initialAim,
@@ -1613,8 +1672,13 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const finalAim = initialAim + defense.adjustment;
 
     const weaponRating = Number(weapon.system.itemRating ?? 0);
+    const weaponRatingContribution = result.heavyBlow ? weaponRating * 2 : weaponRating;
+    const aimContribution = Math.max(finalAim, 0);
     const gripModifier = result.twoHanded && String(weapon.system.registryId ?? "").includes("SWORD") ? 1 : 0;
-    const damagePool = Math.max(0, finalAim + weaponRating + gripModifier + result.damageModifier);
+    const damagePool = Math.max(
+      0,
+      weaponRatingContribution + aimContribution + gripModifier + result.damageModifier
+    );
     const damageThreshold = Math.max(0, Number(this.actor.system.attributes[result.damageAttribute]?.current ?? 0));
 
     const rollMode = game.settings.get("core", "rollMode");
@@ -1627,10 +1691,13 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Target Actor</span><strong>${foundry.utils.escapeHTML(targetActor.name)}</strong>
           <span>Weapon</span><strong>${foundry.utils.escapeHTML(weapon.name)}</strong>
           <span>Attack Task</span><strong>${foundry.utils.escapeHTML(attackTask.name)}</strong>
+          <span>Chained Tasks</span><strong>${result.heavyBlow && result.calledShot ? "Heavy Blow; Called Shot" : result.heavyBlow ? "Heavy Blow" : result.calledShot ? "Called Shot" : "None"}</strong>
+          <span>Targeted Location</span><strong>${foundry.utils.escapeHTML(targetLocation.name)}</strong>
           <span>Skill</span><strong>${foundry.utils.escapeHTML(skill.name)} ${skillRating}</strong>
           <span>Attack Attribute</span><strong>${attackThreshold}</strong>
           <span>Situational</span><strong>${signedNumber(result.modifier)}</strong>
           <span>Take Aim / bonus</span><strong>${signedNumber(result.aimBonus)}</strong>
+          <span>Called Shot</span><strong>${signedNumber(calledShotModifier)}</strong>
           <span>Range</span><strong>${isBow ? `${result.distance} hexes · increment ${rangeIncrement} (${signedNumber(rangeModifier)})` : "Close"}</strong>
           <span>Pressure</span><strong>−${pressure}</strong>
           <span>Encumbered</span><strong>−${attackStatusModifiers.encumbered}</strong>
@@ -1641,6 +1708,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Dice</span><strong>${attackResults.join(", ")}</strong>
           <span>Attack Successes</span><strong>${attackSuccesses}</strong>
           <span>Passive Defense</span><strong>${passiveDefense}</strong>
+          <span>Initial Aim formula</span><strong>${attackSuccesses} − ${passiveDefense} + 1</strong>
           <span>Initial Aim</span><strong>${initialAim}</strong>
           <span>Active Defense</span><strong>${foundry.utils.escapeHTML(defense.label)}</strong>
           <span>Defense adjustment</span><strong>${signedNumber(defense.adjustment)}</strong>
@@ -1700,6 +1768,9 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         <div class="aec-chat-grid">
           <span>Final Aim</span><strong>${finalAim}</strong>
           <span>Weapon Item Rating</span><strong>${weaponRating}</strong>
+          <span>Item Rating contribution</span><strong>${weaponRatingContribution}${result.heavyBlow ? " · doubled by Heavy Blow" : ""}</strong>
+          <span>Nonnegative Aim contribution</span><strong>${aimContribution}</strong>
+          <span>Targeted Location</span><strong>${foundry.utils.escapeHTML(targetLocation.name)}</strong>
           <span>Grip modifier</span><strong>${signedNumber(gripModifier)}</strong>
           <span>Other Damage modifier</span><strong>${signedNumber(result.damageModifier)}</strong>
           <span>Damage Pool</span><strong>${damagePool}</strong>
@@ -1742,6 +1813,17 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         "system.resource.value": Math.max(0, loadedAmmo - 1),
         "system.ready": false
       });
+    }
+
+    const chainedPressure = (result.heavyBlow ? 1 : 0) + (result.calledShot ? 2 : 0);
+    if (chainedPressure > 0) {
+      const currentPressure = Math.max(0, Number(this.actor.system.resources.pressure ?? 0));
+      const pressureCap = 4;
+      const nextPressure = Math.min(pressureCap, currentPressure + chainedPressure);
+      await this.actor.update({"system.resources.pressure": nextPressure});
+      ui.notifications.info(
+        `${this.actor.name} gains ${chainedPressure} Pressure from chained combat Tasks (${currentPressure} → ${nextPressure}).`
+      );
     }
   }
 

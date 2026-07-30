@@ -1042,3 +1042,9 @@
   display: grid;
   gap: 0.2rem;
 }
+
+
+/* v0.0.20: Combat Core r6 */
+.aec-attack-dialog fieldset .aec-checkbox-row {
+  grid-template-columns: auto minmax(0, 1fr);
+}

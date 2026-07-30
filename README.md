@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.19 — Statuses and Roll Integration
+## Version 0.0.20 — Combat Core r6 Synchronization
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -207,3 +207,14 @@ ordinary actions and rolls in the currently implemented workflows.
 The Skill Tree now uses a text search input. Results filter live by Task name,
 owning Skill, and Task ID. Selecting a result expands its Skill ancestry and focuses
 the owning Skill row.
+
+
+## Combat Core v0.1-r6
+
+Initial Aim includes the shared +1 offset. Damage uses only the nonnegative portion of
+Final Aim, so negative Aim does not reduce a weapon's inherent Item Rating contribution.
+
+The Attack dialog supports Heavy Blow, Called Shot, and their compatible combination.
+Heavy Blow replaces the Attack Attribute with Strength and doubles only the weapon Item
+Rating contribution. Called Shot selects a legal Location and applies its Location Depth
+as an Effective Skill penalty. Their Pressure costs apply after the complete Attack.

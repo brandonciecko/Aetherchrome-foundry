@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome: Alpha",
-  "description": "Aetherchrome v0.0.19 enables live Actor Statuses, carried-Load Status refresh, Status-aware roll modifiers and restrictions, and a functional Task search.",
-  "version": "0.0.19",
+  "description": "Aetherchrome v0.0.20 synchronizes Attack, Aim, Damage Pool, Called Shot, Heavy Blow, and chained Pressure with Combat Core v0.1-r6.",
+  "version": "0.0.20",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -49,7 +49,7 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.19/aetherchrome-v0.0.19.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.20/aetherchrome-v0.0.20.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
