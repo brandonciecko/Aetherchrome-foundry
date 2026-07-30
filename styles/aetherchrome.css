@@ -936,3 +936,109 @@
 .aec-defense-dialog, .aec-skill-details { display: grid; gap: 0.6rem; }
 .aec-defense-dialog label { display: grid; gap: 0.25rem; }
 .aec-effort-reset { width: 100%; }
+
+
+/* v0.0.19: real Task search and live Statuses */
+.aec-task-search-wrap {
+  position: relative;
+  min-width: 260px;
+}
+
+.aec-task-search {
+  width: 100%;
+  height: 30px;
+}
+
+.aec-task-search-results {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 2px);
+  right: 0;
+  width: min(440px, 70vw);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-light-primary);
+  background: var(--background);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.aec-task-search-results button {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-light-secondary);
+  background: transparent;
+  text-align: left;
+}
+
+.aec-task-search-results button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.aec-task-search-results small {
+  opacity: 0.7;
+}
+
+.aec-status-controls {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.aec-status-controls button {
+  width: auto;
+  margin: 0;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.aec-status-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.aec-status-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) minmax(260px, 2fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.45rem;
+  border-top: 1px solid var(--color-border-light-secondary);
+}
+
+.aec-status-identity {
+  display: grid;
+}
+
+.aec-status-identity small {
+  opacity: 0.68;
+  font-size: 0.68rem;
+}
+
+.aec-status-effect {
+  font-size: 0.78rem;
+}
+
+.aec-status-row-controls {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.aec-status-row-controls button {
+  min-width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0.15rem;
+}
+
+.aec-status-dialog {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.aec-status-dialog label {
+  display: grid;
+  gap: 0.2rem;
+}

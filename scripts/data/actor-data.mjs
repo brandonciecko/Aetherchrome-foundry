@@ -86,6 +86,19 @@ export class AetherchromeActorData extends foundry.abstract.TypeDataModel {
           pendingCost: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0, min: 0})
         })
       }),
+      statuses: new fields.ArrayField(
+        new fields.SchemaField({
+          id: new fields.StringField({required: true, nullable: false, initial: ""}),
+          statusId: new fields.StringField({required: true, nullable: false, initial: ""}),
+          name: new fields.StringField({required: true, nullable: false, initial: ""}),
+          intensity: new fields.NumberField({required: true, nullable: false, integer: true, initial: 1, min: 0}),
+          source: new fields.StringField({required: true, nullable: false, initial: "Manual"}),
+          location: new fields.StringField({required: true, nullable: false, initial: ""}),
+          relatedActorId: new fields.StringField({required: true, nullable: false, initial: ""}),
+          automatic: new fields.BooleanField({required: true, nullable: false, initial: false})
+        }),
+        {required: true, nullable: false, initial: []}
+      ),
       notes: new fields.HTMLField({required: true, nullable: false, initial: ""})
     };
   }

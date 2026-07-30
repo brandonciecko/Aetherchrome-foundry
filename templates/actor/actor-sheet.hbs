@@ -104,12 +104,28 @@
         <span>{{localize "AETHERCHROME.SkillTreeNote"}}</span>
       </div>
       <div class="aec-tree-controls">
-        <select class="aec-task-search" data-action="taskSearchSelect" aria-label="Search Tasks">
-          <option value="">Search Tasks…</option>
-          {{#each taskSearchOptions as |task|}}
-          <option value="{{task.id}}">{{task.label}}</option>
-          {{/each}}
-        </select>
+        <div class="aec-task-search-wrap">
+          <input
+            class="aec-task-search"
+            type="search"
+            placeholder="Search Tasks…"
+            autocomplete="off"
+            data-task-search-input
+            aria-label="Search Tasks">
+          <div class="aec-task-search-results" data-task-search-results hidden>
+            {{#each taskSearchOptions as |task|}}
+            <button
+              type="button"
+              data-task-search-result
+              data-task-id="{{task.id}}"
+              data-search-text="{{task.name}} {{task.skillName}} {{task.id}}"
+              hidden>
+              <strong>{{task.name}}</strong>
+              <small>{{task.skillName}} · {{task.id}}</small>
+            </button>
+            {{/each}}
+          </div>
+        </div>
         <button type="button" data-action="expandAllSkills">Expand All</button>
         <button type="button" data-action="collapseAllSkills">Collapse All</button>
       </div>
@@ -320,14 +336,39 @@
   </section>
 
   <section class="aec-panel aec-statuses-panel">
-    <h2>Statuses</h2>
+    <div class="aec-section-heading">
+      <div>
+        <h2>Statuses</h2>
+        <span>Current Actor Statuses and source-tracked effects</span>
+      </div>
+      <div class="aec-status-controls">
+        <button type="button" data-action="refreshEncumbranceStatuses">
+          Refresh Encumbrance Statuses
+        </button>
+        <button type="button" data-action="statusAdd">Add Status</button>
+      </div>
+    </div>
+
     {{#if statuses.length}}
     <div class="aec-status-list">
       {{#each statuses as |status|}}
       <div class="aec-status-row">
-        <strong>{{status.name}}</strong>
-        <span>{{status.intensity}}</span>
-        <span>{{status.source}}</span>
+        <div class="aec-status-identity">
+          <strong>{{status.name}}{{#if status.usesIntensity}} {{status.intensity}}{{/if}}</strong>
+          <small>{{status.statusId}} · {{status.sourceDisplay}}{{#if status.locationDisplay}} · {{status.locationDisplay}}{{/if}}</small>
+        </div>
+        <span class="aec-status-effect">{{status.effect}}</span>
+        <div class="aec-status-row-controls">
+          {{#if status.usesIntensity}}
+          <button type="button" data-action="statusIntensityDecrease" data-status-instance-id="{{status.id}}" {{disabled (not status.removable)}}>−</button>
+          <button type="button" data-action="statusIntensityIncrease" data-status-instance-id="{{status.id}}" {{disabled (not status.removable)}}>+</button>
+          {{/if}}
+          {{#if status.removable}}
+          <button type="button" data-action="statusRemove" data-status-instance-id="{{status.id}}" title="Remove {{status.name}}">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+          {{/if}}
+        </div>
       </div>
       {{/each}}
     </div>

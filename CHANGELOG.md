@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.0.19 — 2026-07-29
+
+### Added
+
+- Live Actor Status records with name, Intensity, source, Location note, effect summary, and automatic/manual provenance.
+- Manual Add Status, Remove Status, and Intensity controls.
+- Pressure appears in the Status list as a derived Encounter Status.
+- Manual Refresh Encumbrance Statuses control for the current pre-Turn-automation workflow.
+- EP 1–5 creates source-tracked carried-Load Encumbered at equal Intensity.
+- EP 5 also creates an independent carried-Load Restrained Status.
+- Encumbered subtracts Intensity from Effective Skill only for Agility-paired Task rolls.
+- Fatigued subtracts Intensity from Effective Skill for all tests.
+- Enfeebled reduces Current Strength from Base Strength.
+- Location Injured contributes the current flat functional penalty scaffold.
+- Dead, Comatose, Incapacitated, and Stunned prohibit attacks and ordinary Skill rolls.
+- Roll cards expose Pressure, Encumbered, Fatigued, Location Injured, Effort, and Effective Skill.
+- Functional text Task search with live results by Task name, owning Skill, or Task ID.
+- Search selection expands the owning Skill hierarchy and focuses the result.
+
+### Status availability
+
+Actor-applicable registered Statuses are available for manual records. Ready remains
+an Item Status and is not duplicated in the Actor Status list.
+
+### Current limitations
+
+- Refresh Encumbrance Statuses is manual until complete Turn timing exists.
+- Engaged relation automation, Hidden observer tracking, complete injury Location usage,
+  rest recovery, death checks, and cross-client Active Defense sockets remain deferred.
+- Location Injured currently uses a conservative flat penalty when present; automatic
+  Task-to-Location material-use validation remains deferred.
+
 ## 0.0.18 — 2026-07-29
 
 ### Fixed

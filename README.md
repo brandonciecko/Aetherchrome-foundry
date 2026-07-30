@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.18 — Task-Aware Combat and Sheet Workflow
+## Version 0.0.19 — Statuses and Roll Integration
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -189,3 +189,21 @@ Final Aim and Damage.
 
 Effort is locked after spending until its eligible roll resolves or the manual reset
 button clears it and refunds MP.
+
+
+## Statuses and roll integration
+
+The Actor sheet now stores live source-tracked Status records. Pressure is displayed
+from the existing resource, while Encumbered and Restrained from carried Load are
+updated with the manual Refresh Encumbrance Statuses control until Turn timing is
+fully automated.
+
+Encumbered penalizes only Agility-paired Task rolls. Fatigued penalizes every test.
+Enfeebled reduces Current Strength. Dead, Comatose, Incapacitated, and Stunned block
+ordinary actions and rolls in the currently implemented workflows.
+
+## Task search
+
+The Skill Tree now uses a text search input. Results filter live by Task name,
+owning Skill, and Task ID. Selecting a result expands its Skill ancestry and focuses
+the owning Skill row.

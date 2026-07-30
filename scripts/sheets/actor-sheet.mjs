@@ -12,6 +12,24 @@ const ATTRIBUTE_DEFINITIONS = [
   { key: "essence", label: "Essence", abbreviation: "ESS" }
 ];
 
+const STATUS_CATALOG = [
+  {id: "STS-INCAPACITATED", name: "Incapacitated", intensity: false, effect: "Cannot act, voluntarily move, initiate tests, or actively assist."},
+  {id: "STS-STUNNED", name: "Stunned", intensity: true, effect: "Cannot take voluntary actions or voluntarily move while present."},
+  {id: "STS-RESTRAINED", name: "Restrained", intensity: false, effect: "Cannot voluntarily move or perform movement-related Tasks."},
+  {id: "STS-FATIGUED", name: "Fatigued", intensity: true, effect: "Each Intensity applies -1 Effective Skill to every test."},
+  {id: "STS-ENFEEBLED", name: "Enfeebled", intensity: true, effect: "Each Intensity reduces Current Strength by one step."},
+  {id: "STS-DEAD", name: "Dead", intensity: false, effect: "Persistent death endpoint; cannot participate in actions or tests."},
+  {id: "STS-PRESSURE", name: "Pressure", intensity: true, effect: "Each Intensity applies -1 Effective Skill to every Skill roll.", derived: true},
+  {id: "STS-ENGAGED", name: "Engaged", intensity: false, effect: "Relational combat state; Move and Sprint are prohibited."},
+  {id: "STS-COMBAT-PREPARED", name: "Combat Prepared", intensity: false, effect: "Exempt from Ambush-applied Stunned."},
+  {id: "STS-HIDDEN", name: "Hidden", intensity: true, effect: "Each Intensity penalizes applicable attempts to perceive or locate the Actor."},
+  {id: "STS-ENCUMBERED", name: "Encumbered", intensity: true, effect: "Each Intensity applies -1 Effective Skill to Agility-paired Task rolls."},
+  {id: "STS-COMATOSE", name: "Comatose", intensity: false, effect: "No awareness, actions, movement, tests, communication, or deliberate control."},
+  {id: "STS-LOCATION-INJURED", name: "Location Injured", intensity: false, location: true, effect: "A materially used injured Location applies one flat -1 Effective Skill."},
+  {id: "STS-LOCATION-OVERWHELMED", name: "Location Overwhelmed", intensity: false, location: true, effect: "The named functional Location cannot normally be used."}
+];
+
+
 
 function dataKey(skillId) {
   return skillId.toLowerCase().replace("skl-", "").replaceAll("-", "_");
@@ -90,6 +108,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       taskDetails: AetherchromeActorSheet.#onTaskDetails,
       skillDetails: AetherchromeActorSheet.#onSkillDetails,
       taskSearchSelect: AetherchromeActorSheet.#onTaskSearchSelect,
+      statusAdd: AetherchromeActorSheet.#onStatusAdd,
+      statusRemove: AetherchromeActorSheet.#onStatusRemove,
+      statusIntensityDecrease: AetherchromeActorSheet.#onStatusIntensityDecrease,
+      statusIntensityIncrease: AetherchromeActorSheet.#onStatusIntensityIncrease,
+      refreshEncumbranceStatuses: AetherchromeActorSheet.#onRefreshEncumbranceStatuses,
       pressureDecrease: AetherchromeActorSheet.#onPressureDecrease,
       pressureIncrease: AetherchromeActorSheet.#onPressureIncrease,
       hpDecrease: AetherchromeActorSheet.#onHpDecrease,
@@ -236,8 +259,97 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         effectiveStrength: currentStrength,
         display: `${encumbrance.category} - EP ${encumbrance.penalty}`
       },
-      statuses: []
+      statuses: this.#statusContext(),
+      statusCatalog: STATUS_CATALOG.filter(status => !status.derived)
     }, { inplace: false });
+  }
+
+  #storedStatuses(actor = this.actor) {
+    return Array.from(actor.system.statuses ?? []).map(status => ({
+      id: String(status.id ?? ""),
+      statusId: String(status.statusId ?? ""),
+      name: String(status.name ?? ""),
+      intensity: Math.max(0, Number(status.intensity ?? 0)),
+      source: String(status.source ?? "Manual"),
+      location: String(status.location ?? ""),
+      relatedActorId: String(status.relatedActorId ?? ""),
+      automatic: Boolean(status.automatic)
+    }));
+  }
+
+  #statusContext() {
+    const records = this.#storedStatuses();
+    const pressure = Math.max(0, Number(this.actor.system.resources?.pressure ?? 0));
+    if (pressure > 0) {
+      records.unshift({
+        id: "derived-pressure",
+        statusId: "STS-PRESSURE",
+        name: "Pressure",
+        intensity: pressure,
+        source: "Encounter",
+        location: "",
+        relatedActorId: "",
+        automatic: true
+      });
+    }
+
+    return records.map(record => {
+      const registry = STATUS_CATALOG.find(status => status.id === record.statusId);
+      return {
+        ...record,
+        effect: registry?.effect ?? "No registered effect summary.",
+        usesIntensity: Boolean(registry?.intensity),
+        sourceDisplay: record.source || "Manual",
+        locationDisplay: record.location || "",
+        removable: record.id !== "derived-pressure"
+      };
+    });
+  }
+
+  static #statusIntensity(actor, statusId, source = null) {
+    return Array.from(actor.system.statuses ?? [])
+      .filter(status => String(status.statusId ?? "") === statusId)
+      .filter(status => source === null || String(status.source ?? "") === source)
+      .reduce((maximum, status) => Math.max(maximum, Number(status.intensity ?? 0)), 0);
+  }
+
+  static #hasStatus(actor, statusId) {
+    return Array.from(actor.system.statuses ?? [])
+      .some(status => String(status.statusId ?? "") === statusId);
+  }
+
+  static #actionProhibition(actor) {
+    for (const statusId of ["STS-DEAD", "STS-COMATOSE", "STS-INCAPACITATED", "STS-STUNNED"]) {
+      if (AetherchromeActorSheet.#hasStatus(actor, statusId)) {
+        return STATUS_CATALOG.find(status => status.id === statusId)?.name ?? "Status";
+      }
+    }
+    return "";
+  }
+
+  static #rollStatusModifiers(actor, attributeKey, task = null) {
+    const fatigued = AetherchromeActorSheet.#statusIntensity(actor, "STS-FATIGUED");
+    const encumbered = attributeKey === "agility"
+      ? AetherchromeActorSheet.#statusIntensity(actor, "STS-ENCUMBERED")
+      : 0;
+
+    let injured = 0;
+    if (task && Array.from(actor.system.statuses ?? []).some(status =>
+      String(status.statusId ?? "") === "STS-LOCATION-INJURED"
+    )) {
+      injured = 1;
+    }
+
+    return {
+      fatigued,
+      encumbered,
+      injured,
+      total: fatigued + encumbered + injured
+    };
+  }
+
+  async #writeStatuses(statuses) {
+    await this.actor.update({"system.statuses": statuses});
   }
 
   #resourceContext(resourceKey) {
@@ -320,15 +432,66 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   _onRender(context, options) {
     super._onRender(context, options);
 
-    this.element
-      ?.querySelectorAll('input[data-skill-id]')
-      .forEach(input => {
-        input.addEventListener("change", async event => {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          await this.#persistSkillRating(event.currentTarget);
-        }, {capture: true});
+    this.element?.querySelectorAll('input[data-skill-id]').forEach(input => {
+      input.addEventListener("change", async event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        await this.#persistSkillRating(event.currentTarget);
+      }, {capture: true});
+    });
+
+    const form = this.element?.querySelector("form");
+    const searchInput = this.element?.querySelector("[data-task-search-input]");
+    const resultPanel = this.element?.querySelector("[data-task-search-results]");
+
+    const updateSearch = () => {
+      if (!searchInput || !resultPanel) return;
+      const query = String(searchInput.value ?? "").trim().toLowerCase();
+      const rows = Array.from(resultPanel.querySelectorAll("[data-task-search-result]"));
+      let visible = 0;
+      for (const row of rows) {
+        const haystack = String(row.dataset.searchText ?? "").toLowerCase();
+        const show = Boolean(query) && haystack.includes(query);
+        row.hidden = !show;
+        if (show) visible += 1;
+      }
+      resultPanel.hidden = !query || visible === 0;
+    };
+
+    searchInput?.addEventListener("input", updateSearch);
+    searchInput?.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        searchInput.value = "";
+        updateSearch();
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const first = resultPanel?.querySelector("[data-task-search-result]:not([hidden])");
+        first?.click();
+      }
+    });
+
+    resultPanel?.querySelectorAll("[data-task-search-result]").forEach(button => {
+      button.addEventListener("click", async event => {
+        event.preventDefault();
+        await this.#focusTask(button.dataset.taskId);
       });
+    });
+
+    if (form) {
+      requestAnimationFrame(() => {
+        form.scrollTop = this.#savedScrollTop;
+        if (this.#pendingTaskFocus) {
+          const row = this.element?.querySelector(
+            `[data-skill-row-id="${CSS.escape(this.#pendingTaskFocus)}"]`
+          );
+          row?.scrollIntoView({block: "center", behavior: "smooth"});
+          row?.classList.add("aec-focus-flash");
+          setTimeout(() => row?.classList.remove("aec-focus-flash"), 1800);
+          this.#pendingTaskFocus = "";
+        }
+      });
+    }
   }
 
   async #persistSkillRating(input) {
@@ -494,25 +657,6 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   async #renderPreservingScroll() {
     this.#captureScroll();
     await this.render();
-  }
-
-  _onRender(context, options) {
-    super._onRender(context, options);
-    const form = this.element?.querySelector("form");
-    if (form) {
-      requestAnimationFrame(() => {
-        form.scrollTop = this.#savedScrollTop;
-        if (this.#pendingTaskFocus) {
-          const row = this.element?.querySelector(
-            `[data-skill-row-id="${CSS.escape(this.#pendingTaskFocus)}"]`
-          );
-          row?.scrollIntoView({block: "center", behavior: "smooth"});
-          row?.classList.add("aec-focus-flash");
-          setTimeout(() => row?.classList.remove("aec-focus-flash"), 1800);
-          this.#pendingTaskFocus = "";
-        }
-      });
-    }
   }
 
   static async #adjustResource(sheet, resourceKey, delta) {
@@ -728,9 +872,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     });
   }
 
-  static async #onTaskSearchSelect(event, target) {
-    event.preventDefault();
-    const taskId = target.value;
+  async #focusTask(taskId) {
     const task = TASK_CATALOG.find(entry => entry.id === taskId);
     if (!task) return;
 
@@ -746,6 +888,147 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     await this.#setSkillExpansion(expansion);
     this.#pendingTaskFocus = task.skillId;
     await this.render();
+  }
+
+  static async #onTaskSearchSelect(event, target) {
+    event.preventDefault();
+    await this.#focusTask(target.value);
+  }
+
+  static async #onStatusAdd(event) {
+    event.preventDefault();
+
+    const options = STATUS_CATALOG
+      .filter(status => !status.derived)
+      .map(status => `<option value="${status.id}">${status.name}</option>`)
+      .join("");
+
+    const result = await DialogV2.wait({
+      window: {title: `${this.actor.name}: Add Status`},
+      content: `
+        <form class="aec-status-dialog">
+          <label><span>Status</span><select name="statusId">${options}</select></label>
+          <label><span>Intensity</span><input name="intensity" type="number" min="1" step="1" value="1"></label>
+          <label><span>Source</span><input name="source" type="text" value="Manual"></label>
+          <label><span>Location / relation note</span><input name="location" type="text" value=""></label>
+        </form>`,
+      buttons: [
+        {
+          action: "add",
+          label: "Add Status",
+          default: true,
+          callback: (_event, button) => ({
+            statusId: button.form.elements.statusId.value,
+            intensity: Math.max(1, Number(button.form.elements.intensity.value) || 1),
+            source: String(button.form.elements.source.value || "Manual"),
+            location: String(button.form.elements.location.value || "")
+          })
+        },
+        {action: "cancel", label: "Cancel"}
+      ],
+      modal: true,
+      rejectClose: false
+    });
+
+    if (!result || result === "cancel") return;
+    const registry = STATUS_CATALOG.find(status => status.id === result.statusId);
+    if (!registry) return;
+
+    const statuses = this.#storedStatuses();
+    statuses.push({
+      id: foundry.utils.randomID(),
+      statusId: registry.id,
+      name: registry.name,
+      intensity: registry.intensity ? result.intensity : 1,
+      source: result.source,
+      location: registry.location ? result.location : result.location,
+      relatedActorId: "",
+      automatic: false
+    });
+    await this.#writeStatuses(statuses);
+    await this.#applyEnfeebledStrength();
+  }
+
+  static async #onStatusRemove(event, target) {
+    event.preventDefault();
+    const statusId = String(target.dataset.statusInstanceId ?? "");
+    const statuses = this.#storedStatuses().filter(status => status.id !== statusId);
+    await this.#writeStatuses(statuses);
+    await this.#applyEnfeebledStrength();
+  }
+
+  static async #adjustStatusIntensity(sheet, target, delta) {
+    const instanceId = String(target.dataset.statusInstanceId ?? "");
+    const statuses = sheet.#storedStatuses();
+    const status = statuses.find(entry => entry.id === instanceId);
+    if (!status) return;
+    status.intensity = Math.max(1, Number(status.intensity ?? 1) + delta);
+    await sheet.#writeStatuses(statuses);
+    await sheet.#applyEnfeebledStrength();
+  }
+
+  static async #onStatusIntensityDecrease(event, target) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustStatusIntensity(this, target, -1);
+  }
+
+  static async #onStatusIntensityIncrease(event, target) {
+    event.preventDefault();
+    await AetherchromeActorSheet.#adjustStatusIntensity(this, target, 1);
+  }
+
+  async #applyEnfeebledStrength() {
+    const intensity = AetherchromeActorSheet.#statusIntensity(this.actor, "STS-ENFEEBLED");
+    const base = Math.max(1, Number(this.actor.system.attributes?.strength?.base ?? 1));
+    const next = Math.max(0, base - intensity);
+    if (Number(this.actor.system.attributes?.strength?.current ?? 0) !== next) {
+      await this.actor.update({"system.attributes.strength.current": next});
+    }
+  }
+
+  static async #onRefreshEncumbranceStatuses(event) {
+    event.preventDefault();
+    const inventory = this.actor.items.map(item => ({
+      aggregateLoad: Number(item.system.load ?? 0) * Math.max(0, Number(item.system.quantity ?? 1))
+    }));
+    const totalLoad = inventory.reduce((total, item) => total + item.aggregateLoad, 0);
+    const strength = Math.max(0, Number(this.actor.system.attributes?.strength?.current ?? 0));
+    const encumbrance = AetherchromeActorSheet.#encumbranceFrom(totalLoad, strength);
+
+    const statuses = this.#storedStatuses().filter(status =>
+      !(status.automatic && status.source === "Carried Load" &&
+        ["STS-ENCUMBERED", "STS-RESTRAINED"].includes(status.statusId))
+    );
+
+    if (encumbrance.penalty > 0) {
+      statuses.push({
+        id: foundry.utils.randomID(),
+        statusId: "STS-ENCUMBERED",
+        name: "Encumbered",
+        intensity: encumbrance.penalty,
+        source: "Carried Load",
+        location: "",
+        relatedActorId: "",
+        automatic: true
+      });
+    }
+    if (encumbrance.penalty >= 5) {
+      statuses.push({
+        id: foundry.utils.randomID(),
+        statusId: "STS-RESTRAINED",
+        name: "Restrained",
+        intensity: 1,
+        source: "Carried Load",
+        location: "",
+        relatedActorId: "",
+        automatic: true
+      });
+    }
+
+    await this.#writeStatuses(statuses);
+    ui.notifications.info(
+      `${this.actor.name}: carried-Load Statuses refreshed to ${encumbrance.category} / EP ${encumbrance.penalty}.`
+    );
   }
 
   static #embeddedItem(sheet, target) {
@@ -990,6 +1273,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const skill = SKILL_CATALOG.find(entry => entry.id === task?.skillId);
     if (!task || !skill) return {adjustment: 0, label: "Declined"};
 
+    const prohibitedBy = AetherchromeActorSheet.#actionProhibition(targetActor);
+    if (prohibitedBy) {
+      return {adjustment: 0, label: `No defense (${prohibitedBy})`};
+    }
+
     const rating = Math.max(0, Number(targetActor.system.skillTree?.[dataKey(skill.id)]?.rating ?? 0));
     const attributeKey = {
       STR: "strength", HLT: "health", INT: "intelligence",
@@ -998,7 +1286,15 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const threshold = Math.max(0, Number(targetActor.system.attributes?.[attributeKey]?.current ?? 0));
     const pressure = Math.max(0, Number(targetActor.system.resources?.pressure ?? 0));
     const effort = Boolean(targetActor.system.resources?.effort?.activeDefense);
-    const effectiveSkill = Math.max(0, rating - (effort ? 0 : pressure));
+    const statusModifiers = AetherchromeActorSheet.#rollStatusModifiers(
+      targetActor,
+      attributeKey,
+      task
+    );
+    const effectiveSkill = Math.max(
+      0,
+      rating - (effort ? 0 : pressure) - statusModifiers.total
+    );
     const dice = effectiveSkill === 0 ? 1 : effectiveSkill;
     const rollThreshold = effectiveSkill === 0 ? chanceThreshold(threshold) : threshold;
     const roll = await new Roll(`${dice}d10`).evaluate();
@@ -1074,6 +1370,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
   static async #onWeaponAttack(event, target) {
     event.preventDefault();
+    const prohibitedBy = AetherchromeActorSheet.#actionProhibition(this.actor);
+    if (prohibitedBy) {
+      ui.notifications.warn(`${this.actor.name} cannot attack while ${prohibitedBy}.`);
+      return;
+    }
     const weapon = AetherchromeActorSheet.#embeddedItem(this, target);
     if (!weapon || weapon.type !== "weapon") return;
 
@@ -1273,6 +1574,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const attackThreshold = Math.max(0, Number(this.actor.system.attributes[taskAttributeKey]?.current ?? 0));
     const pressure = Math.max(0, Number(this.actor.system.resources.pressure ?? 0));
     const effortBonus = this.actor.system.resources.effort?.openSkill ? 1 : 0;
+    const attackStatusModifiers = AetherchromeActorSheet.#rollStatusModifiers(
+      this.actor,
+      taskAttributeKey,
+      attackTask
+    );
 
     let rangeModifier = 0;
     let rangeIncrement = 0;
@@ -1289,7 +1595,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
     const effectiveSkill = Math.max(
       0,
-      skillRating + result.modifier + result.aimBonus + rangeModifier + effortBonus - pressure
+      skillRating + result.modifier + result.aimBonus + rangeModifier + effortBonus
+        - pressure - attackStatusModifiers.total
     );
     const chanceDie = effectiveSkill === 0;
     const attackDice = chanceDie ? 1 : effectiveSkill;
@@ -1326,6 +1633,9 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Take Aim / bonus</span><strong>${signedNumber(result.aimBonus)}</strong>
           <span>Range</span><strong>${isBow ? `${result.distance} hexes · increment ${rangeIncrement} (${signedNumber(rangeModifier)})` : "Close"}</strong>
           <span>Pressure</span><strong>−${pressure}</strong>
+          <span>Encumbered</span><strong>−${attackStatusModifiers.encumbered}</strong>
+          <span>Fatigued</span><strong>−${attackStatusModifiers.fatigued}</strong>
+          <span>Location Injured</span><strong>−${attackStatusModifiers.injured}</strong>
           <span>Effort</span><strong>${signedNumber(effortBonus)}</strong>
           <span>Effective Skill</span><strong>${effectiveSkill}${chanceDie ? " · Chance Die" : ""}</strong>
           <span>Dice</span><strong>${attackResults.join(", ")}</strong>
@@ -1652,6 +1962,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   }
 
   static async #rollSkillPool(sheet, {skill, task, attributeKey, baseSkill, modifier, difficulty, note}) {
+    const prohibitedBy = AetherchromeActorSheet.#actionProhibition(sheet.actor);
+    if (prohibitedBy) {
+      ui.notifications.warn(`${sheet.actor.name} cannot make this roll while ${prohibitedBy}.`);
+      return null;
+    }
+
     const attributeDefinition = ATTRIBUTE_DEFINITIONS.find(entry => entry.key === attributeKey);
     if (!attributeDefinition || !sheet.actor.system.attributes[attributeKey]) {
       throw new Error(`Unknown governing Attribute: ${attributeKey}`);
@@ -1660,7 +1976,15 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const attribute = Math.max(0, Number(sheet.actor.system.attributes[attributeKey].current ?? 0));
     const pressure = Math.max(0, Math.min(4, Number(sheet.actor.system.resources.pressure ?? 0)));
     const effortBonus = sheet.actor.system.resources.effort?.openSkill ? 1 : 0;
-    const effectiveSkill = Math.max(0, baseSkill + modifier + effortBonus - pressure);
+    const statusModifiers = AetherchromeActorSheet.#rollStatusModifiers(
+      sheet.actor,
+      attributeKey,
+      task
+    );
+    const effectiveSkill = Math.max(
+      0,
+      baseSkill + modifier + effortBonus - pressure - statusModifiers.total
+    );
     const isChanceDie = effectiveSkill === 0;
     const threshold = isChanceDie ? chanceThreshold(attribute) : attribute;
     const diceCount = isChanceDie ? 1 : effectiveSkill;
