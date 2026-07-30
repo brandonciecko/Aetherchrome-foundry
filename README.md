@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.17 — Actor Editing and Encumbrance
+## Version 0.0.18 — Task-Aware Combat and Sheet Workflow
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -175,3 +175,17 @@ Maximum HP and MP from Base Health and Base Essence.
 The sheet displays automatic Encumbrance from Total Carried Load and Current
 Strength, including category, EP, and thresholds. A placeholder Statuses panel
 is included for later Active Effect and Status Registry integration.
+
+
+## v0.0.18 workflow additions
+
+The Actor sheet preserves scroll position during ordinary inline updates. Skill names
+provide brief hover summaries and full click details. Task search expands the owning
+Skill path and focuses the result.
+
+Weapon attacks require a campaign-available Attack Task. Passive Defense uses half
+target Agility rounded up, and attack resolution pauses for Active Defense before
+Final Aim and Damage.
+
+Effort is locked after spending until its eligible roll resolves or the manual reset
+button clears it and refunds MP.

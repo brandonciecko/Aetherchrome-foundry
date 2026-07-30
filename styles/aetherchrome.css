@@ -899,3 +899,40 @@
   align-items: center;
 }
 .aec-empty-state { margin: 0; opacity: 0.65; font-style: italic; }
+
+
+/* v0.0.18: task search, skill details, stable scrolling, and attack workflow */
+.aec-tree-controls { align-items: center; }
+.aec-task-search { min-width: 220px; height: 30px; }
+.aec-skill-name-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.aec-skill-name-button:hover strong { text-decoration: underline; }
+.aec-focus-flash { animation: aec-focus-flash 1.8s ease-out; }
+@keyframes aec-focus-flash {
+  0%, 35% { outline: 3px solid var(--color-border-highlight); }
+  100% { outline: 0 solid transparent; }
+}
+.aec-attack-dialog {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+.aec-attack-scroll-region {
+  min-height: 0;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  padding-right: 0.35rem;
+}
+.aec-defense-dialog, .aec-skill-details { display: grid; gap: 0.6rem; }
+.aec-defense-dialog label { display: grid; gap: 0.25rem; }
+.aec-effort-reset { width: 100%; }

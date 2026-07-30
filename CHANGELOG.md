@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.0.18 — 2026-07-29
+
+### Fixed
+- Base Attribute edits are read from the live form before Edit mode closes.
+- Current Attributes, Maximum HP, Maximum MP, and HP thresholds synchronize after saving Base Attributes.
+- Passive Defense uses half target Agility, rounded up.
+- Actor-sheet rerenders preserve scroll position for Skill-tree and Ready-state controls.
+- Attack dialogs use an explicit scroll region with a persistent vertical scrollbar.
+
+### Added
+- Campaign-available, weapon-compatible Attack Task selector.
+- Selected Attack Task determines the attack Skill and suggested governing Attribute.
+- Active Defense pause and local owner/GM prompt before Final Aim and Damage.
+- Dodge, eligible Parry, Shield Block, and Decline options.
+- Brief Skill tooltip on hover and full registered Skill details on click.
+- Task search control to the left of Expand All; selection expands ancestors and focuses the owning Skill.
+- Effort lockout after spending.
+- Manual Reset Pending Effort control with full MP refund and confirmation.
+- Pending Effort clears after its eligible roll.
+
+### Current limitation
+- Active Defense prompting is implemented in the resolving client for the target Actor owner or GM workflow. Cross-client socket handoff is not yet implemented.
+
 ## 0.0.17 — 2026-07-29
 
 ### Fixed

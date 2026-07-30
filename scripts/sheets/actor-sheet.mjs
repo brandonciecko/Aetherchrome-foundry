@@ -71,6 +71,8 @@ function signedNumber(value) {
 
 export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #editMode = false;
+  #savedScrollTop = 0;
+  #pendingTaskFocus = "";
 
   static DEFAULT_OPTIONS = {
     classes: ["aetherchrome", "actor-sheet"],
@@ -86,6 +88,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       toggleEditMode: AetherchromeActorSheet.#onToggleEditMode,
       editPortrait: AetherchromeActorSheet.#onEditPortrait,
       taskDetails: AetherchromeActorSheet.#onTaskDetails,
+      skillDetails: AetherchromeActorSheet.#onSkillDetails,
+      taskSearchSelect: AetherchromeActorSheet.#onTaskSearchSelect,
       pressureDecrease: AetherchromeActorSheet.#onPressureDecrease,
       pressureIncrease: AetherchromeActorSheet.#onPressureIncrease,
       hpDecrease: AetherchromeActorSheet.#onHpDecrease,
@@ -144,9 +148,25 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         hidden,
         parentName: parent?.name ?? "",
         parentRating,
-        maxRating: parent ? parentRating : 10
+        maxRating: parent ? parentRating : 10,
+        briefDescription: `${row.recordType}; typical Attribute ${row.primaryAttribute}.`,
+        taskCount: row.tasks.length
       };
     });
+
+    const taskSearchOptions = TASK_CATALOG
+      .filter(task => availableTaskIds.has(task.id))
+      .map(task => {
+        const skill = SKILL_CATALOG.find(entry => entry.id === task.skillId);
+        return {
+          id: task.id,
+          name: task.name,
+          skillId: task.skillId,
+          skillName: skill?.name ?? task.skillId,
+          label: `${task.name} — ${skill?.name ?? task.skillId}`
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
 
     const inventory = this.actor.items.map(item => {
         const quantity = Math.max(0, Number(item.system.quantity ?? 1));
@@ -422,17 +442,19 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     event.preventDefault();
 
     const leavingEditMode = this.#editMode;
-    this.#editMode = !this.#editMode;
-
     if (leavingEditMode) {
       const updates = {};
+      const form = this.element?.querySelector("form");
 
       for (const attribute of ATTRIBUTE_DEFINITIONS) {
+        const input = form?.querySelector(
+          `[name="system.attributes.${attribute.key}.base"]`
+        );
         const base = Math.max(
           1,
           Math.min(
             9,
-            Math.trunc(Number(this.actor.system.attributes?.[attribute.key]?.base ?? 1))
+            Math.trunc(Number(input?.value ?? this.actor.system.attributes?.[attribute.key]?.base ?? 1))
           )
         );
         updates[`system.attributes.${attribute.key}.base`] = base;
@@ -450,16 +472,47 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       updates["system.resources.magic.value"] = Math.min(mpCurrent, baseEssence);
 
       await this.actor.update(updates);
+      this.#editMode = false;
       ui.notifications.info(
-        "Actor Edit mode disabled. Attributes and derived HP/MP values were synchronized."
+        "Actor Edit mode disabled. Base Attributes were saved and derived values synchronized."
       );
     } else {
+      this.#editMode = true;
       ui.notifications.info(
         "Actor Edit mode enabled. Base Attributes and portrait can now be changed."
       );
     }
 
+    await this.#renderPreservingScroll();
+  }
+
+  #captureScroll() {
+    const form = this.element?.querySelector("form");
+    this.#savedScrollTop = form?.scrollTop ?? 0;
+  }
+
+  async #renderPreservingScroll() {
+    this.#captureScroll();
     await this.render();
+  }
+
+  _onRender(context, options) {
+    super._onRender(context, options);
+    const form = this.element?.querySelector("form");
+    if (form) {
+      requestAnimationFrame(() => {
+        form.scrollTop = this.#savedScrollTop;
+        if (this.#pendingTaskFocus) {
+          const row = this.element?.querySelector(
+            `[data-skill-row-id="${CSS.escape(this.#pendingTaskFocus)}"]`
+          );
+          row?.scrollIntoView({block: "center", behavior: "smooth"});
+          row?.classList.add("aec-focus-flash");
+          setTimeout(() => row?.classList.remove("aec-focus-flash"), 1800);
+          this.#pendingTaskFocus = "";
+        }
+      });
+    }
   }
 
   static async #adjustResource(sheet, resourceKey, delta) {
@@ -493,34 +546,39 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   static async #onOpenEffortDialog(event) {
     event.preventDefault();
 
+    const effortState = this.actor.system.resources.effort ?? {};
+    const pendingType = String(effortState.pendingType ?? "");
+    const pendingCost = Math.max(0, Number(effortState.pendingCost ?? 0));
+    const locked = Boolean(pendingType || effortState.openSkill || effortState.activeDefense);
+    const disabled = locked ? "disabled" : "";
+
     const content = `
       <form class="aec-effort-dialog">
         <p><strong>Current MP:</strong> ${this.#resourceContext("magic").value}</p>
+        <p><strong>Pending Effort:</strong> ${locked ? foundry.utils.escapeHTML(pendingType || "Pending") : "None"}</p>
 
         <fieldset>
           <legend>Open Skill Effort — 1 MP</legend>
           <p>Apply +1 Effective Skill to the next eligible Open Skill roll.</p>
-          <button type="button" data-effort="openSkill">Spend 1 MP</button>
+          <button type="button" data-effort="openSkill" ${disabled}>Spend 1 MP</button>
         </fieldset>
 
         <fieldset>
           <legend>Active Defense Effort — 1 MP</legend>
           <p>Ignore Pressure penalties on the next eligible Active Defense.</p>
-          <button type="button" data-effort="activeDefense">Spend 1 MP</button>
+          <button type="button" data-effort="activeDefense" ${disabled}>Spend 1 MP</button>
         </fieldset>
 
         <fieldset>
           <legend>Specified-Cost Activation — Variable MP</legend>
-          <label>
-            <span>Amount</span>
-            <input name="amount" type="number" min="1" step="1" value="1">
-          </label>
-          <label>
-            <span>Source or note</span>
-            <input name="note" type="text" value="">
-          </label>
-          <button type="button" data-effort="variable">Spend MP</button>
+          <label><span>Amount</span><input name="amount" type="number" min="1" step="1" value="1" ${disabled}></label>
+          <label><span>Source or note</span><input name="note" type="text" value="" ${disabled}></label>
+          <button type="button" data-effort="variable" ${disabled}>Spend MP</button>
         </fieldset>
+
+        <button type="button" class="aec-effort-reset" data-effort-reset ${locked ? "" : "disabled"}>
+          Reset Pending Effort${pendingCost ? ` and refund ${pendingCost} MP` : ""}
+        </button>
       </form>
     `;
 
@@ -530,36 +588,68 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       buttons: [{action: "close", label: "Close", default: true}],
       render: (_event, dialog) => {
         const form = dialog.element.querySelector("form");
+
+        form?.querySelector("[data-effort-reset]")?.addEventListener("click", async clickEvent => {
+          clickEvent.preventDefault();
+          const live = this.actor.system.resources.effort ?? {};
+          const refund = Math.max(0, Number(live.pendingCost ?? 0));
+          const confirmed = await DialogV2.confirm({
+            window: {title: "Reset Pending Effort"},
+            content: `<p>Clear pending Effort and refund <strong>${refund} MP</strong>?</p>`,
+            yes: {label: "Reset and Refund"},
+            no: {label: "Cancel"},
+            modal: true
+          });
+          if (!confirmed) return;
+          const max = Number(this.actor.system.resources.magic.max ?? 0);
+          const current = Number(this.actor.system.resources.magic.value ?? 0);
+          await this.actor.update({
+            "system.resources.magic.value": Math.min(max, current + refund),
+            "system.resources.effort.openSkill": false,
+            "system.resources.effort.activeDefense": false,
+            "system.resources.effort.pendingType": "",
+            "system.resources.effort.pendingCost": 0
+          });
+          ui.notifications.info(`Pending Effort reset; ${refund} MP refunded.`);
+          dialog.close();
+        });
+
         form?.querySelectorAll("[data-effort]").forEach(button => {
           button.addEventListener("click", async clickEvent => {
             clickEvent.preventDefault();
+            const liveEffort = this.actor.system.resources.effort ?? {};
+            if (liveEffort.pendingType || liveEffort.openSkill || liveEffort.activeDefense) {
+              ui.notifications.warn("Resolve a roll or reset pending Effort before spending more.");
+              return;
+            }
 
             const effort = button.dataset.effort;
             const live = this.#resourceContext("magic");
             let cost = 1;
             let note = "";
-
             if (effort === "variable") {
               cost = Math.max(1, Number(form.elements.amount.value) || 1);
               note = String(form.elements.note.value ?? "").trim();
             }
 
             const nextMp = live.value - cost;
-            const update = {"system.resources.magic.value": nextMp};
-            if (effort === "openSkill") update["system.resources.effort.openSkill"] = true;
-            if (effort === "activeDefense") update["system.resources.effort.activeDefense"] = true;
-
-            await this.actor.update(update);
-
             const label = effort === "openSkill"
               ? "Open Skill Effort"
               : effort === "activeDefense"
                 ? "Active Defense Effort"
-                : "Specified-Cost Activation";
+                : (note || "Specified-Cost Activation");
 
-            const suffix = note ? ` — ${foundry.utils.escapeHTML(note)}` : "";
-            ui.notifications.info(`${label}: spent ${cost} MP${suffix}. Current MP ${nextMp}.`);
-            this.render();
+            const update = {
+              "system.resources.magic.value": nextMp,
+              "system.resources.effort.pendingType": label,
+              "system.resources.effort.pendingCost": cost
+            };
+            if (effort === "openSkill") update["system.resources.effort.openSkill"] = true;
+            if (effort === "activeDefense") update["system.resources.effort.activeDefense"] = true;
+
+            await this.actor.update(update);
+            ui.notifications.info(`${label}: spent ${cost} MP. Further Effort is locked until a roll or reset.`);
+            dialog.close();
           });
         });
       },
@@ -590,7 +680,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     else expansion.add(skillId);
 
     await this.#setSkillExpansion(expansion);
-    this.render();
+    await this.#renderPreservingScroll();
   }
 
   static async #onExpandAllSkills(event) {
@@ -601,13 +691,61 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         .map(skill => skill.id)
     );
     await this.#setSkillExpansion(expansion);
-    this.render();
+    await this.#renderPreservingScroll();
   }
 
   static async #onCollapseAllSkills(event) {
     event.preventDefault();
     await this.#setSkillExpansion(new Set());
-    this.render();
+    await this.#renderPreservingScroll();
+  }
+
+  static async #onSkillDetails(event, target) {
+    event.preventDefault();
+    const skill = SKILL_CATALOG.find(entry => entry.id === target.dataset.skillId);
+    if (!skill) return;
+    const parent = SKILL_CATALOG.find(entry => entry.id === skill.parentId);
+    const tasks = TASK_CATALOG.filter(task => task.skillId === skill.id)
+      .filter(task => game.aetherchrome.campaign.getAvailableTaskIds().includes(task.id));
+    const taskHtml = tasks.length
+      ? `<ul>${tasks.map(task => `<li><strong>${foundry.utils.escapeHTML(task.name)}</strong> — ${foundry.utils.escapeHTML(task.requirements || "No recorded requirements")}</li>`).join("")}</ul>`
+      : "<p>No available registered Tasks.</p>";
+
+    await DialogV2.wait({
+      window: {title: `${skill.name}: Skill Details`},
+      content: `
+        <section class="aec-skill-details">
+          <p><strong>Type:</strong> ${skill.recordType}</p>
+          <p><strong>Parent:</strong> ${parent?.name ?? "None"}</p>
+          <p><strong>Typical Attribute:</strong> ${skill.primaryAttribute}</p>
+          <p><strong>Registered scope:</strong> This Skill currently operates through its available registered Tasks.</p>
+          <h3>Available Tasks</h3>
+          ${taskHtml}
+        </section>`,
+      buttons: [{action: "close", label: "Close", default: true}],
+      modal: true,
+      rejectClose: false
+    });
+  }
+
+  static async #onTaskSearchSelect(event, target) {
+    event.preventDefault();
+    const taskId = target.value;
+    const task = TASK_CATALOG.find(entry => entry.id === taskId);
+    if (!task) return;
+
+    const expansion = await this.#getSkillExpansion();
+    let skill = SKILL_CATALOG.find(entry => entry.id === task.skillId);
+    while (skill) {
+      if (SKILL_CATALOG.some(candidate => candidate.parentId === skill.id)) {
+        expansion.add(skill.id);
+      }
+      skill = SKILL_CATALOG.find(entry => entry.id === skill.parentId);
+    }
+
+    await this.#setSkillExpansion(expansion);
+    this.#pendingTaskFocus = task.skillId;
+    await this.render();
   }
 
   static #embeddedItem(sheet, target) {
@@ -640,6 +778,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     event.preventDefault();
     const item = AetherchromeActorSheet.#embeddedItem(this, target);
     if (!item) return;
+    this.#captureScroll();
     await item.update({"system.ready": !Boolean(item.system.ready)});
   }
 
@@ -737,6 +876,34 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     }).join("");
   }
 
+  static #attackTasksForWeapon(sheet, weapon) {
+    const available = new Set(game.aetherchrome.campaign.getAvailableTaskIds());
+    const registryId = String(weapon.system.registryId ?? "").toUpperCase();
+
+    const compatibleSkillIds = registryId.includes("BOW")
+      ? new Set(["SKL-BOW"])
+      : registryId.includes("DAGGER") || registryId.includes("KNIFE")
+        ? new Set(["SKL-KNIVES", "SKL-THROWN"])
+        : registryId.includes("SWORD")
+          ? new Set(["SKL-SWORDS"])
+          : new Set(["SKL-FIGHT", "SKL-MELEE", "SKL-THROWN"]);
+
+    return TASK_CATALOG.filter(task =>
+      available.has(task.id) &&
+      String(task.tags ?? "").split(";").map(tag => tag.trim()).includes("Attack") &&
+      compatibleSkillIds.has(task.skillId)
+    );
+  }
+
+  static #attackTaskOptions(sheet, weapon) {
+    return AetherchromeActorSheet.#attackTasksForWeapon(sheet, weapon)
+      .map(task => {
+        const skill = SKILL_CATALOG.find(entry => entry.id === task.skillId);
+        return `<option value="${task.id}">${foundry.utils.escapeHTML(task.name)} — ${foundry.utils.escapeHTML(skill?.name ?? task.skillId)}</option>`;
+      })
+      .join("");
+  }
+
   static #skillOptions(sheet, weapon) {
     const id = String(weapon.system.registryId ?? "");
     const allowed = id.includes("BOW")
@@ -765,6 +932,97 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     return roll.dice.flatMap(die => die.results)
       .filter(result => result.active !== false)
       .map(result => Number(result.result));
+  }
+
+  static async #promptActiveDefense(targetActor, initialAim, weaponName) {
+    const available = new Set(game.aetherchrome.campaign.getAvailableTaskIds());
+    const options = [];
+
+    const addTask = taskId => {
+      const task = TASK_CATALOG.find(entry => entry.id === taskId);
+      if (!task || !available.has(task.id)) return;
+      const skill = SKILL_CATALOG.find(entry => entry.id === task.skillId);
+      const rating = Number(targetActor.system.skillTree?.[dataKey(task.skillId)]?.rating ?? 0);
+      options.push({task, skill, rating});
+    };
+
+    addTask("TASK-DODGE-EVADE");
+    if (targetActor.items.some(item => item.type === "weapon" && item.system.ready)) {
+      addTask("TASK-SWORDS-PARRY");
+      addTask("TASK-KNIVES-PARRY");
+    }
+    if (targetActor.items.some(item => item.type === "shield" && item.system.ready)) {
+      addTask("TASK-SHIELD-BLOCK-SELF");
+    }
+
+    const optionHtml = options.map(option =>
+      `<option value="${option.task.id}">${foundry.utils.escapeHTML(option.task.name)} — ${foundry.utils.escapeHTML(option.skill?.name ?? "")} ${option.rating}</option>`
+    ).join("");
+
+    const choice = await DialogV2.wait({
+      window: {title: `${targetActor.name}: Active Defense`},
+      content: `
+        <form class="aec-defense-dialog">
+          <p><strong>${foundry.utils.escapeHTML(weaponName)}</strong> has Initial Aim <strong>${initialAim}</strong>.</p>
+          <label><span>Defense</span>
+            <select name="taskId">
+              <option value="">Decline Defense</option>
+              ${optionHtml}
+            </select>
+          </label>
+        </form>`,
+      buttons: [
+        {
+          action: "continue",
+          label: "Continue",
+          default: true,
+          callback: (_event, button) => button.form.elements.taskId.value
+        },
+        {action: "cancel", label: "Decline Defense"}
+      ],
+      modal: true,
+      rejectClose: false
+    });
+
+    if (!choice || choice === "cancel") return {adjustment: 0, label: "Declined"};
+
+    const task = TASK_CATALOG.find(entry => entry.id === choice);
+    const skill = SKILL_CATALOG.find(entry => entry.id === task?.skillId);
+    if (!task || !skill) return {adjustment: 0, label: "Declined"};
+
+    const rating = Math.max(0, Number(targetActor.system.skillTree?.[dataKey(skill.id)]?.rating ?? 0));
+    const attributeKey = {
+      STR: "strength", HLT: "health", INT: "intelligence",
+      AGL: "agility", CHA: "charisma", ESS: "essence"
+    }[String(task.typicalAttribute ?? "AGL").split("/")[0]] ?? "agility";
+    const threshold = Math.max(0, Number(targetActor.system.attributes?.[attributeKey]?.current ?? 0));
+    const pressure = Math.max(0, Number(targetActor.system.resources?.pressure ?? 0));
+    const effort = Boolean(targetActor.system.resources?.effort?.activeDefense);
+    const effectiveSkill = Math.max(0, rating - (effort ? 0 : pressure));
+    const dice = effectiveSkill === 0 ? 1 : effectiveSkill;
+    const rollThreshold = effectiveSkill === 0 ? chanceThreshold(threshold) : threshold;
+    const roll = await new Roll(`${dice}d10`).evaluate();
+    const successes = AetherchromeActorSheet.#countSuccesses(roll, rollThreshold);
+    const difficulty = Math.max(0, Number(task.defaultDifficulty ?? 0));
+    const adjustment = successes >= difficulty
+      ? -successes
+      : Math.max(0, difficulty - successes);
+
+    await roll.toMessage({
+      speaker: ChatMessage.getSpeaker({actor: targetActor}),
+      flavor: `${targetActor.name} — ${task.name}`,
+      content: `<section class="aec-chat-card"><h3>${task.name}</h3><p>Successes ${successes}; Aim adjustment ${signedNumber(adjustment)}.</p></section>`
+    });
+
+    if (effort) {
+      await targetActor.update({
+        "system.resources.effort.activeDefense": false,
+        "system.resources.effort.pendingType": "",
+        "system.resources.effort.pendingCost": 0
+      });
+    }
+
+    return {adjustment, label: task.name};
   }
 
   static async #onWeaponReload(event, target) {
@@ -866,10 +1124,17 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     }
     const defaultAttackAttribute = "agility";
     const defaultDamageAttribute = String(weapon.system.damageAttribute ?? "strength");
+    const attackTasks = AetherchromeActorSheet.#attackTasksForWeapon(this, weapon);
+    const attackTaskOptions = AetherchromeActorSheet.#attackTaskOptions(this, weapon);
+    if (!attackTasks.length) {
+      ui.notifications.warn(`${weapon.name} has no valid campaign-available Attack Task.`);
+      return;
+    }
+    const selectedAttackTask = attackTasks[0];
     const skillOptions = AetherchromeActorSheet.#skillOptions(this, weapon);
 
     const content = `
-      <form class="aec-attack-dialog">
+      <form class="aec-attack-dialog"><div class="aec-attack-scroll-region">
         <div class="aec-attack-summary">
           <strong>${foundry.utils.escapeHTML(weapon.name)}</strong>
           <span>Item Rating ${Number(weapon.system.itemRating ?? 0)}</span>
@@ -878,6 +1143,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
         <fieldset>
           <legend>Attack Test</legend>
+          <label><span>Attack Task</span><select name="taskId">${attackTaskOptions}</select></label>
           <label><span>Skill</span><select name="skillId">${skillOptions}</select></label>
           <label><span>Attack Attribute</span>
             <select name="attackAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultAttackAttribute)}</select>
@@ -894,10 +1160,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <label><span>Target</span><input name="targetName" type="text" value="${foundry.utils.escapeHTML(targetName)}" readonly></label>
           <label><span>Target Agility</span><input name="targetAttribute" type="number" value="${targetAgility}" readonly></label>
           <label><span>Cover modifier to Passive Defense</span><input name="cover" type="number" value="0" min="0" max="2" step="1"></label>
-          <label><span>Active Defense Aim adjustment</span>
-            <input name="defenseAdjustment" type="number" value="0" step="1">
-          </label>
-          <p class="aec-dialog-note">Enter a negative value when a defense reduces Aim; enter a positive value when failure adds Aim.</p>
+          <p class="aec-dialog-note">After the attack roll, resolution pauses for the target Actor's Active Defense choice.</p>
         </fieldset>
 
         <fieldset>
@@ -917,6 +1180,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
             <span>Use two-handed sword grip modifier (+1 Damage Pool)</span>
           </label>
         </fieldset>
+        </div>
       </form>
     `;
 
@@ -942,6 +1206,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           callback: (_event, button) => {
             const form = button.form;
             return {
+              taskId: form.elements.taskId.value,
               skillId: form.elements.skillId.value,
               attackAttribute: form.elements.attackAttribute.value,
               modifier: Number(form.elements.modifier.value) || 0,
@@ -950,7 +1215,6 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
               targetName: String(form.elements.targetName.value || "Target"),
               targetAttribute: Math.max(0, Number(form.elements.targetAttribute.value) || 0),
               cover: Math.max(0, Number(form.elements.cover.value) || 0),
-              defenseAdjustment: Number(form.elements.defenseAdjustment.value) || 0,
               damageAttribute: form.elements.damageAttribute.value,
               armor: Math.max(0, Number(form.elements.armor.value) || 0),
               applyDamage: Boolean(form.elements.applyDamage.checked),
@@ -979,22 +1243,34 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         const attackForm = element.querySelector(".aec-attack-dialog");
         if (attackForm) {
           attackForm.style.minHeight = "0";
-          attackForm.style.overflowY = "auto";
-          attackForm.style.overscrollBehavior = "contain";
+          attackForm.style.overflow = "hidden";
+          const scrollRegion = attackForm.querySelector(".aec-attack-scroll-region");
+          if (scrollRegion) {
+            scrollRegion.style.maxHeight = `${Math.max(360, viewportHeight - 190)}px`;
+            scrollRegion.style.overflowY = "scroll";
+            scrollRegion.style.scrollbarGutter = "stable";
+            scrollRegion.style.overscrollBehavior = "contain";
+          }
         }
       }
     });
 
     if (!result || result === "cancel") return;
 
-    const skill = SKILL_CATALOG.find(entry => entry.id === result.skillId);
-    if (!skill) {
-      ui.notifications.error("The selected attack Skill could not be found.");
+    const attackTask = TASK_CATALOG.find(entry => entry.id === result.taskId);
+    const skill = SKILL_CATALOG.find(entry => entry.id === attackTask?.skillId);
+    if (!attackTask || !skill) {
+      ui.notifications.error("The selected Attack Task or Skill could not be found.");
       return;
     }
 
     const skillRating = Math.max(0, Number(this.actor.system.skillTree[dataKey(skill.id)]?.rating ?? 0));
-    const attackThreshold = Math.max(0, Number(this.actor.system.attributes[result.attackAttribute]?.current ?? 0));
+    const taskAttributeCode = String(attackTask.typicalAttribute ?? "AGL").split("/")[0];
+    const taskAttributeKey = {
+      STR: "strength", HLT: "health", INT: "intelligence",
+      AGL: "agility", CHA: "charisma", ESS: "essence"
+    }[taskAttributeCode] ?? result.attackAttribute;
+    const attackThreshold = Math.max(0, Number(this.actor.system.attributes[taskAttributeKey]?.current ?? 0));
     const pressure = Math.max(0, Number(this.actor.system.resources.pressure ?? 0));
     const effortBonus = this.actor.system.resources.effort?.openSkill ? 1 : 0;
 
@@ -1022,7 +1298,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const attackSuccesses = AetherchromeActorSheet.#countSuccesses(attackRoll, attackSuccessThreshold);
     const passiveDefense = Math.ceil(result.targetAttribute / 2) + result.cover;
     const initialAim = attackSuccesses - passiveDefense;
-    const finalAim = initialAim + result.defenseAdjustment;
+    const defense = await AetherchromeActorSheet.#promptActiveDefense(
+      targetActor,
+      initialAim,
+      weapon.name
+    );
+    const finalAim = initialAim + defense.adjustment;
 
     const weaponRating = Number(weapon.system.itemRating ?? 0);
     const gripModifier = result.twoHanded && String(weapon.system.registryId ?? "").includes("SWORD") ? 1 : 0;
@@ -1038,6 +1319,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Target Token</span><strong>${foundry.utils.escapeHTML(targetName)}</strong>
           <span>Target Actor</span><strong>${foundry.utils.escapeHTML(targetActor.name)}</strong>
           <span>Weapon</span><strong>${foundry.utils.escapeHTML(weapon.name)}</strong>
+          <span>Attack Task</span><strong>${foundry.utils.escapeHTML(attackTask.name)}</strong>
           <span>Skill</span><strong>${foundry.utils.escapeHTML(skill.name)} ${skillRating}</strong>
           <span>Attack Attribute</span><strong>${attackThreshold}</strong>
           <span>Situational</span><strong>${signedNumber(result.modifier)}</strong>
@@ -1050,7 +1332,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Attack Successes</span><strong>${attackSuccesses}</strong>
           <span>Passive Defense</span><strong>${passiveDefense}</strong>
           <span>Initial Aim</span><strong>${initialAim}</strong>
-          <span>Defense adjustment</span><strong>${signedNumber(result.defenseAdjustment)}</strong>
+          <span>Active Defense</span><strong>${foundry.utils.escapeHTML(defense.label)}</strong>
+          <span>Defense adjustment</span><strong>${signedNumber(defense.adjustment)}</strong>
           <span>Final Aim</span><strong>${finalAim}</strong>
         </div>
       </section>
@@ -1066,7 +1349,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     );
 
     if (effortBonus > 0) {
-      await this.actor.update({"system.resources.effort.openSkill": false});
+      await this.actor.update({
+        "system.resources.effort.openSkill": false,
+        "system.resources.effort.pendingType": "",
+        "system.resources.effort.pendingCost": 0
+      });
     }
 
     let damageSuccesses = 0;

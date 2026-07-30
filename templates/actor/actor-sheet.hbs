@@ -104,6 +104,12 @@
         <span>{{localize "AETHERCHROME.SkillTreeNote"}}</span>
       </div>
       <div class="aec-tree-controls">
+        <select class="aec-task-search" data-action="taskSearchSelect" aria-label="Search Tasks">
+          <option value="">Search Tasks…</option>
+          {{#each taskSearchOptions as |task|}}
+          <option value="{{task.id}}">{{task.label}}</option>
+          {{/each}}
+        </select>
         <button type="button" data-action="expandAllSkills">Expand All</button>
         <button type="button" data-action="collapseAllSkills">Collapse All</button>
       </div>
@@ -115,7 +121,7 @@
     </div>
     <div class="aec-skill-tree">
       {{#each skillRows as |skill|}}
-      <div class="aec-tree-row{{#if skill.hidden}} aec-tree-row-hidden{{/if}}" style="--aec-depth: {{skill.depth}};">
+      <div class="aec-tree-row{{#if skill.hidden}} aec-tree-row-hidden{{/if}}" data-skill-row-id="{{skill.id}}" style="--aec-depth: {{skill.depth}};">
         <div class="aec-tree-skill" style="padding-left: {{skill.indent}}px;">
           {{#if skill.hasChildren}}
           <button
@@ -130,10 +136,15 @@
           {{else}}
           <span class="aec-tree-toggle-spacer"></span>
           {{/if}}
-          <span>
+          <button
+            type="button"
+            class="aec-skill-name-button"
+            data-action="skillDetails"
+            data-skill-id="{{skill.id}}"
+            title="{{skill.briefDescription}}">
             <strong>{{skill.name}}</strong>
             <small>{{skill.recordType}}</small>
-          </span>
+          </button>
         </div>
         <input
           name="system.skillTree.{{skill.key}}.rating"
