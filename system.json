@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome: Alpha",
-  "description": "Aetherchrome v0.0.20 synchronizes Attack, Aim, Damage Pool, Called Shot, Heavy Blow, and chained Pressure with Combat Core v0.1-r6.",
-  "version": "0.0.20",
+  "description": "Aetherchrome v0.0.21 updates the HP track, repairs Task search and chat containment, and replaces the system background.",
+  "version": "0.0.21",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -49,9 +49,9 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.20/aetherchrome-v0.0.20.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.21/aetherchrome-v0.0.21.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
-  "background": "systems/aetherchrome/assets/aetherchrome-alpha-banner.webp"
+  "background": "systems/aetherchrome/assets/aetherchrome-alpha-background.webp"
 }

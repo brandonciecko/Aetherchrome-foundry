@@ -1048,3 +1048,84 @@
 .aec-attack-dialog fieldset .aec-checkbox-row {
   grid-template-columns: auto minmax(0, 1fr);
 }
+
+
+/* v0.0.21: HP r7, reliable Task search, and sidebar containment */
+.aec-hp-threshold-note {
+  grid-column: 1 / -1;
+  opacity: 0.75;
+  font-size: 0.7rem;
+}
+
+.aec-task-search-results {
+  display: none;
+}
+
+.aec-task-search-overlay {
+  position: fixed;
+  z-index: 100000;
+  display: block;
+  max-height: min(320px, 50vh);
+  overflow-y: auto;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-light-primary);
+  border-radius: 3px;
+  background: var(--background, #17151d);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+.aec-task-search-overlay[hidden] {
+  display: none;
+}
+
+.aec-task-search-overlay button {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-light-secondary);
+  background: transparent;
+  text-align: left;
+}
+
+.aec-task-search-overlay button:hover,
+.aec-task-search-overlay button.is-active {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.aec-task-search-empty {
+  padding: 0.6rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.aec-chat-card,
+.aec-chat-card * {
+  box-sizing: border-box;
+}
+
+.aec-chat-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.aec-chat-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.aec-chat-grid > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#sidebar.collapsed .chat-message .aec-chat-card,
+#sidebar.collapsed .message-content .aec-chat-card {
+  display: none;
+}

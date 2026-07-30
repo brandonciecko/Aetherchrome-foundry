@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.0.21 — 2026-07-29
+
+### HP track synchronization
+
+- Base Maximum HP now equals twice Base Health.
+- New Actors with Base Health 4 begin with 8 Maximum HP.
+- Low-HP Incapacitation begins at Current HP equal to or below Base Health.
+- The Actor sheet displays the current low-HP Incapacitation Difficulty as Base Health minus Current HP.
+- The first Death Check interval begins below 0 HP.
+- Later Death Check intervals occur at each additional full Base Health below 0.
+- Edit-mode synchronization recalculates Maximum HP from the newly saved Base Health.
+
+### Fixed
+
+- Task search now renders through a fixed, document-level overlay that is not clipped by the Actor sheet.
+- Search filters by Task name, owning Skill, and Task ID.
+- Added visible No matching Tasks feedback.
+- Added Arrow Up, Arrow Down, Enter, and Escape keyboard controls.
+- Selecting a Task records it in the owning Skill, expands its ancestry, scrolls to it, and highlights the row.
+- Aetherchrome chat cards are constrained to the Foundry Chat Log width.
+- Chat-card grids and long values wrap instead of overflowing.
+- Aetherchrome chat-card content is hidden while the Foundry sidebar is collapsed.
+
+### Assets
+
+- Removed the previous system background.
+- Added the replacement Aetherchrome: Alpha background supplied for this release.
+- Updated the system manifest to use only the replacement background.
+
 ## 0.0.20 — 2026-07-29
 
 ### Combat Core synchronization

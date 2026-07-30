@@ -66,6 +66,11 @@
         <button type="button" data-action="hpIncrease" aria-label="Increase HP" {{disabled hp.atMaximum}}>
           <i class="fa-solid fa-plus"></i>
         </button>
+        <small class="aec-hp-threshold-note">
+          Low-HP check at {{hp.baseAttribute}} HP or less
+          {{#if hp.incapacityDifficulty}} · Current Difficulty {{hp.incapacityDifficulty}}{{/if}}
+          {{#if hp.deathCheckInterval}} · Death Check interval {{hp.deathCheckInterval}}{{/if}}
+        </small>
       </div>
 
       <div class="aec-resource-stepper aec-resource-{{mp.state}}">
@@ -118,12 +123,16 @@
               type="button"
               data-task-search-result
               data-task-id="{{task.id}}"
+              data-task-name="{{task.name}}"
               data-search-text="{{task.name}} {{task.skillName}} {{task.id}}"
               hidden>
               <strong>{{task.name}}</strong>
               <small>{{task.skillName}} · {{task.id}}</small>
             </button>
             {{/each}}
+            <div class="aec-task-search-empty" data-task-search-empty hidden>
+              No matching Tasks
+            </div>
           </div>
         </div>
         <button type="button" data-action="expandAllSkills">Expand All</button>

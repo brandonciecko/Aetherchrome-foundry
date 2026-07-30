@@ -110,6 +110,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   #editMode = false;
   #savedScrollTop = 0;
   #pendingTaskFocus = "";
+  #taskSearchOverlay = null;
 
   static DEFAULT_OPTIONS = {
     classes: ["aetherchrome", "actor-sheet"],
@@ -374,25 +375,34 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   #resourceContext(resourceKey) {
     const isHealth = resourceKey === "health";
     const attributeKey = isHealth ? "health" : "essence";
-    const maximum = Math.max(0, Number(this.actor.system.attributes[attributeKey]?.base ?? 0));
+    const baseAttribute = Math.max(
+      0,
+      Number(this.actor.system.attributes[attributeKey]?.base ?? 0)
+    );
+    const maximum = isHealth ? 2 * baseAttribute : baseAttribute;
     const storedValue = Number(this.actor.system.resources[resourceKey]?.value ?? maximum);
-    const minimum = isHealth ? -5 * maximum : null;
+    const minimum = isHealth ? -5 * Math.max(1, baseAttribute) : null;
     const value = isHealth
       ? Math.max(minimum, Math.min(maximum, storedValue))
       : Math.min(maximum, storedValue);
 
     let state = "normal";
     let threshold = null;
+    let incapacityDifficulty = 0;
+    let deathCheckInterval = 0;
 
     if (isHealth) {
-      if (value <= 0) {
-        state = "danger";
-        threshold = 0;
+      if (value <= baseAttribute) {
+        state = "warning";
+        incapacityDifficulty = Math.max(0, baseAttribute - value);
       }
-      if (maximum > 0 && value < -maximum) {
-        const interval = Math.floor((Math.abs(value) - 1) / maximum);
+      if (value < 0) {
+        state = "danger";
+        deathCheckInterval = 1 + Math.floor(Math.abs(value + 1) / Math.max(1, baseAttribute));
+        threshold = deathCheckInterval;
+      }
+      if (value < -baseAttribute) {
         state = "critical";
-        threshold = interval;
       }
     } else if (value < 0) {
       state = "warning";
@@ -403,8 +413,11 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       value,
       maximum,
       minimum,
+      baseAttribute,
       state,
       threshold,
+      incapacityDifficulty,
+      deathCheckInterval,
       atMinimum: minimum !== null && value <= minimum,
       atMaximum: value >= maximum
     };
@@ -461,41 +474,116 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
     const form = this.element?.querySelector("form");
     const searchInput = this.element?.querySelector("[data-task-search-input]");
-    const resultPanel = this.element?.querySelector("[data-task-search-results]");
+    const sourcePanel = this.element?.querySelector("[data-task-search-results]");
 
-    const updateSearch = () => {
-      if (!searchInput || !resultPanel) return;
-      const query = String(searchInput.value ?? "").trim().toLowerCase();
-      const rows = Array.from(resultPanel.querySelectorAll("[data-task-search-result]"));
-      let visible = 0;
-      for (const row of rows) {
-        const haystack = String(row.dataset.searchText ?? "").toLowerCase();
-        const show = Boolean(query) && haystack.includes(query);
-        row.hidden = !show;
-        if (show) visible += 1;
-      }
-      resultPanel.hidden = !query || visible === 0;
-    };
+    this.#taskSearchOverlay?.remove();
+    this.#taskSearchOverlay = null;
 
-    searchInput?.addEventListener("input", updateSearch);
-    searchInput?.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
-        searchInput.value = "";
-        updateSearch();
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        const first = resultPanel?.querySelector("[data-task-search-result]:not([hidden])");
-        first?.click();
-      }
-    });
+    if (searchInput && sourcePanel) {
+      const overlay = sourcePanel.cloneNode(true);
+      overlay.classList.add("aec-task-search-overlay");
+      overlay.hidden = true;
+      document.body.appendChild(overlay);
+      this.#taskSearchOverlay = overlay;
 
-    resultPanel?.querySelectorAll("[data-task-search-result]").forEach(button => {
-      button.addEventListener("click", async event => {
-        event.preventDefault();
-        await this.#focusTask(button.dataset.taskId);
+      const resultButtons = Array.from(
+        overlay.querySelectorAll("[data-task-search-result]")
+      );
+      const noResults = overlay.querySelector("[data-task-search-empty]");
+      let activeIndex = -1;
+
+      const positionOverlay = () => {
+        const rect = searchInput.getBoundingClientRect();
+        overlay.style.left = `${Math.round(rect.left)}px`;
+        overlay.style.top = `${Math.round(rect.bottom + 4)}px`;
+        overlay.style.width = `${Math.max(320, Math.round(rect.width))}px`;
+      };
+
+      const visibleButtons = () => resultButtons.filter(button => !button.hidden);
+
+      const setActive = index => {
+        const visible = visibleButtons();
+        visible.forEach(button => button.classList.remove("is-active"));
+        if (!visible.length) {
+          activeIndex = -1;
+          return;
+        }
+        activeIndex = ((index % visible.length) + visible.length) % visible.length;
+        visible[activeIndex].classList.add("is-active");
+        visible[activeIndex].scrollIntoView({block: "nearest"});
+      };
+
+      const closeSearch = () => {
+        overlay.hidden = true;
+        activeIndex = -1;
+      };
+
+      const updateSearch = () => {
+        const query = String(searchInput.value ?? "").trim().toLowerCase();
+        let visibleCount = 0;
+
+        for (const button of resultButtons) {
+          const haystack = String(button.dataset.searchText ?? "").toLowerCase();
+          const show = Boolean(query) && haystack.includes(query);
+          button.hidden = !show;
+          button.classList.remove("is-active");
+          if (show) visibleCount += 1;
+        }
+
+        if (noResults) noResults.hidden = !query || visibleCount > 0;
+        overlay.hidden = !query;
+        activeIndex = -1;
+        if (query) positionOverlay();
+      };
+
+      searchInput.addEventListener("input", updateSearch);
+      searchInput.addEventListener("focus", updateSearch);
+      searchInput.addEventListener("keydown", event => {
+        const visible = visibleButtons();
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeSearch();
+          searchInput.value = "";
+          return;
+        }
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          setActive(activeIndex + 1);
+          return;
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          setActive(activeIndex - 1);
+          return;
+        }
+
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const selected = activeIndex >= 0 ? visible[activeIndex] : visible[0];
+          selected?.click();
+        }
       });
-    });
+
+      for (const button of resultButtons) {
+        button.addEventListener("click", async event => {
+          event.preventDefault();
+          searchInput.value = button.dataset.taskName ?? searchInput.value;
+          closeSearch();
+          await this.#focusTask(button.dataset.taskId);
+        });
+      }
+
+      const outsideClick = event => {
+        if (event.target === searchInput || overlay.contains(event.target)) return;
+        closeSearch();
+      };
+      document.addEventListener("pointerdown", outsideClick, {once: true, capture: true});
+      window.addEventListener("resize", positionOverlay, {once: true});
+      window.addEventListener("scroll", positionOverlay, {once: true, capture: true});
+    }
 
     if (form) {
       requestAnimationFrame(() => {
@@ -645,11 +733,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
       const baseHealth = updates["system.attributes.health.base"];
       const baseEssence = updates["system.attributes.essence.base"];
-      const hpCurrent = Number(this.actor.system.resources?.health?.value ?? baseHealth);
+      const maximumHp = 2 * baseHealth;
+      const hpCurrent = Number(this.actor.system.resources?.health?.value ?? maximumHp);
       const mpCurrent = Number(this.actor.system.resources?.magic?.value ?? baseEssence);
 
-      updates["system.resources.health.max"] = baseHealth;
-      updates["system.resources.health.value"] = Math.min(hpCurrent, baseHealth);
+      updates["system.resources.health.max"] = maximumHp;
+      updates["system.resources.health.value"] = Math.min(hpCurrent, maximumHp);
       updates["system.resources.magic.max"] = baseEssence;
       updates["system.resources.magic.value"] = Math.min(mpCurrent, baseEssence);
 
@@ -894,6 +983,13 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
   async #focusTask(taskId) {
     const task = TASK_CATALOG.find(entry => entry.id === taskId);
     if (!task) return;
+
+    const skillKey = dataKey(task.skillId);
+    if (this.actor.system.skillTree?.[skillKey]?.selectedTask !== task.id) {
+      await this.actor.update({
+        [`system.skillTree.${skillKey}.selectedTask`]: task.id
+      });
+    }
 
     const expansion = await this.#getSkillExpansion();
     let skill = SKILL_CATALOG.find(entry => entry.id === task.skillId);

@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.20 — Combat Core r6 Synchronization
+## Version 0.0.21 — HP and Interface Maintenance
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -218,3 +218,19 @@ The Attack dialog supports Heavy Blow, Called Shot, and their compatible combina
 Heavy Blow replaces the Attack Attribute with Strength and doubles only the weapon Item
 Rating contribution. Called Shot selects a legal Location and applies its Location Depth
 as an Effective Skill penalty. Their Pressure costs apply after the complete Attack.
+
+
+## v0.0.21
+
+Maximum HP is twice Base Health. The Actor sheet displays the current low-HP
+Incapacitation Difficulty and Death Check interval.
+
+Task search uses a document-level overlay so results remain visible above Foundry
+ApplicationV2 sheet content. Selecting a result also records the Task in its owning
+Skill.
+
+Aetherchrome chat cards are constrained to the Chat Log and do not protrude onto the
+canvas when the Foundry sidebar is collapsed.
+
+The prior system background asset has been removed and replaced with the current
+Aetherchrome: Alpha background.
