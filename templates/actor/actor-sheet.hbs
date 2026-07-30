@@ -1,4 +1,8 @@
 <form class="{{cssClass}}" autocomplete="off">
+  <div class="aec-campaign-badge" title="World campaign profile">
+    {{campaign.name}}{{#if campaign.version}} · {{campaign.version}}{{/if}}
+  </div>
+
   <header class="aec-sheet-header">
     <img src="{{actor.img}}" data-edit="img" alt="{{actor.name}}">
     <div class="aec-identity">

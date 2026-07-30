@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.0.11 — 2026-07-29
+
+### Added
+
+- World-level Campaign Profile setting.
+- CampaignRegistry and CampaignService.
+- Alpha 0.1 campaign profile as the default.
+- Campaign-driven Skill, Trait, Item, and equipment-package availability.
+- Module-provider slots for magic, combat, and encumbrance.
+- Structured campaign exceptions.
+- Active campaign badge on Actor sheets.
+- Aetherchrome: Alpha system banner.
+
+### Changed
+
+- System display title is now `Aetherchrome: Alpha`.
+- System ID remains `aetherchrome`.
+- Skill Tree and equipment package availability now route through the active campaign service.
+- Existing Alpha behavior remains unchanged by default.
+
 ## 0.0.10 — 2026-07-29
 
 ### Added

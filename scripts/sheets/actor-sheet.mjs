@@ -1,5 +1,4 @@
 import { SKILL_CATALOG, TASK_CATALOG } from "../catalogs/skill-catalog.mjs";
-import { ALPHA_PACKAGES, alphaPackageById } from "../catalogs/equipment-catalog.mjs";
 
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -18,9 +17,9 @@ function dataKey(skillId) {
   return skillId.toLowerCase().replace("skl-", "").replaceAll("-", "_");
 }
 
-function buildTree(actor) {
+function buildTree(actor, availableSkillIds) {
   const byParent = new Map();
-  for (const skill of SKILL_CATALOG) {
+  for (const skill of SKILL_CATALOG.filter(entry => availableSkillIds.has(entry.id))) {
     const parent = skill.parentId ?? "ROOT";
     const children = byParent.get(parent) ?? [];
     children.push(skill);
@@ -109,7 +108,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     await this.#normalizeDerivedResources();
     const context = await super._prepareContext(options);
     const expansion = await this.#getSkillExpansion();
-    const allRows = flattenTree(buildTree(this.actor));
+    const availableSkillIds = new Set(game.aetherchrome.campaign.getAvailableSkillIds());
+    const allRows = flattenTree(buildTree(this.actor, availableSkillIds));
     const hiddenDepths = [];
 
     const skillRows = allRows.map(row => {
@@ -144,7 +144,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       mp: this.#resourceContext("magic"),
       openSkillEffortPending: Boolean(this.actor.system.resources.effort?.openSkill),
       activeDefenseEffortPending: Boolean(this.actor.system.resources.effort?.activeDefense),
-      equipmentPackages: ALPHA_PACKAGES.map(entry => ({
+      campaign: {
+        id: game.aetherchrome.campaign.activeId,
+        name: game.aetherchrome.campaign.name,
+        version: game.aetherchrome.campaign.profile?.version ?? ""
+      },
+      equipmentPackages: game.aetherchrome.campaign.getEquipmentPackages().map(entry => ({
         ...entry,
         selected: entry.id === this.actor.system.equipment?.packageId
       })),
@@ -814,7 +819,9 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     event.preventDefault();
     const section = target.closest(".aec-equipment-package");
     const packageId = section?.querySelector("select")?.value;
-    const packageRecord = alphaPackageById(packageId);
+    const packageRecord = game.aetherchrome.campaign
+      .getEquipmentPackages()
+      .find(entry => entry.id === packageId) ?? null;
 
     if (!packageRecord) {
       ui.notifications.warn("Select an Alpha equipment package first.");

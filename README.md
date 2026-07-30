@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.10 — Attack and Damage Foundation
+## Version 0.0.11 — Campaign Profile Architecture
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -117,3 +117,13 @@ Attack and Damage are posted as linked chat cards using Foundry's current Roll
 Mode. Automatic targeting, Reaction rolls, location Armor lookup, target HP
 application, Heavy Blow, Called Shot, and Take Aim effect storage remain for
 later combat milestones.
+
+
+## Campaign profiles
+
+The active campaign profile is selected in Foundry's world settings. Core code
+accesses campaign configuration through `game.aetherchrome.campaign`.
+
+The campaign service supplies available Skills, Traits, Items, equipment
+packages, configuration values, module-provider IDs, and explicit campaign
+exceptions. Alpha 0.1 remains the default profile.

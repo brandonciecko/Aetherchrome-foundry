@@ -1,9 +1,8 @@
 {
   "id": "aetherchrome",
-  "title": "Aetherchrome",
-  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.10 adds the Attack and Damage foundation: weapon attacks, Aim, passive defense, Damage Pools, Armor subtraction, grip modifiers, bow loading, ammunition consumption, and linked roll-mode-aware chat cards.",
-  "background": "systems/aetherchrome/assets/Aetherchrome-alpha banner.webp",
-  "version": "0.0.10",
+  "title": "Aetherchrome: Alpha",
+  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.11 introduces campaign-profile architecture while preserving Alpha 0.1 as the default.",
+  "version": "0.0.11",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -50,8 +49,9 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.10/aetherchrome-v0.0.10.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.11/aetherchrome-v0.0.11.zip",
   "license": "LICENSE",
   "readme": "README.md",
-  "changelog": "CHANGELOG.md"
+  "changelog": "CHANGELOG.md",
+  "background": "systems/aetherchrome/assets/aetherchrome-alpha-banner.webp"
 }
