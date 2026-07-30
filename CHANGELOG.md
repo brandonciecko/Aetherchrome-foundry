@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.0.17 — 2026-07-29
+
+### Fixed
+
+- Portrait editing now opens Foundry's image picker through an explicit action.
+- Base Attributes are locked outside Edit mode and editable inside Edit mode.
+- Leaving Edit mode resets Current Attributes to Base.
+- Leaving Edit mode recalculates Maximum HP from Base Health and Maximum MP from Base Essence.
+- HP and MP remain negative when applicable but are capped when above their new maxima.
+- HP threshold display follows the recalculated Maximum HP.
+
+### Added
+
+- Automatic Encumbrance display from Total Carried Load and Current Strength.
+- Encumbrance category, EP, and Strength-derived threshold display.
+- Placeholder Statuses section with `No active Statuses`.
+
+### Deferred
+
+- Encumbered and Restrained Status automation remains deferred to an end-of-turn workflow.
+- The Statuses section is presentation-only in this release.
+
+## 0.0.16 — 2026-07-29
+
+### Fixed
+
+- Replaced the ineffective attack-dialog scrolling workaround.
+- Attack dialogs now open with an explicit viewport-safe width and height.
+- Attack dialogs are explicitly resizable, positioned, and minimizable.
+- The field region scrolls independently from the action-button footer.
+- The attack form receives a visible native scrollbar when content exceeds the available height.
+- Added a render-time fallback that constrains the dialog to the current browser viewport.
+- The underlying Scene no longer receives wheel movement while the attack form is being scrolled.
+
+### Notes
+
+- This release includes every change from v0.0.15.
+- Browser-window detachment is not added; the Foundry application window is movable,
+  minimizable, and resizable inside the Foundry client.
+
 ## 0.0.15 — 2026-07-29
 
 ### Fixed

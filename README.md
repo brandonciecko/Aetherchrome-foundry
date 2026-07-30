@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.15 — Actor Sheet Maintenance
+## Version 0.0.17 — Actor Editing and Encumbrance
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -162,3 +162,16 @@ only while Edit mode is enabled.
 The Alpha campaign profile now excludes the retired Alpha Tasks and the
 Triggered Skill while preserving their universal catalog records for possible
 future campaign use.
+
+
+## Edit-mode synchronization
+
+Base Attributes and portrait selection are available only during Actor Edit
+mode. Leaving Edit mode resets Current Attributes to Base and recalculates
+Maximum HP and MP from Base Health and Base Essence.
+
+## Encumbrance and Statuses
+
+The sheet displays automatic Encumbrance from Total Carried Load and Current
+Strength, including category, EP, and thresholds. A placeholder Statuses panel
+is included for later Active Effect and Status Registry integration.

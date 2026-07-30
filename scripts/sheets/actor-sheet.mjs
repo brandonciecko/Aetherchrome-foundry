@@ -84,6 +84,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     },
     actions: {
       toggleEditMode: AetherchromeActorSheet.#onToggleEditMode,
+      editPortrait: AetherchromeActorSheet.#onEditPortrait,
       taskDetails: AetherchromeActorSheet.#onTaskDetails,
       pressureDecrease: AetherchromeActorSheet.#onPressureDecrease,
       pressureIncrease: AetherchromeActorSheet.#onPressureIncrease,
@@ -147,7 +148,40 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       };
     });
 
-    return foundry.utils.mergeObject(context, {
+    const inventory = this.actor.items.map(item => {
+        const quantity = Math.max(0, Number(item.system.quantity ?? 1));
+        const resourceMax = Math.max(0, Number(item.system.resource?.max ?? 0));
+        const resourceValue = Math.max(0, Number(item.system.resource?.value ?? 0));
+        return {
+          id: item.id,
+          name: item.name,
+          img: item.img,
+          type: item.type,
+          typeLabel: item.type.charAt(0).toUpperCase() + item.type.slice(1),
+          registryId: item.system.registryId,
+          quantity,
+          load: Number(item.system.load ?? 0),
+          aggregateLoad: Number(item.system.load ?? 0) * quantity,
+          ready: Boolean(item.system.ready),
+          worn: Boolean(item.system.worn),
+          carryLocation: item.system.wearLocation || item.system.carryLocation || "—",
+          configuration: item.system.configuration || item.system.grip || "—",
+          hasResource: resourceMax > 0,
+          resourceValue,
+          resourceMax,
+          resourceUnit: item.system.resource?.unit || "",
+          isWeapon: item.type === "weapon",
+          canReload: item.type === "weapon" && resourceMax > 0 && Boolean(item.system.ammunitionType),
+          itemRating: Number(item.system.itemRating ?? 0)
+        };      });
+    const totalLoad = inventory.reduce((total, item) => total + item.aggregateLoad, 0);
+    const currentStrength = Math.max(
+      0,
+      Number(this.actor.system.attributes?.strength?.current ?? 0)
+    );
+    const encumbrance = AetherchromeActorSheet.#encumbranceFrom(totalLoad, currentStrength);
+
+        return foundry.utils.mergeObject(context, {
       actor: this.actor,
       system: this.actor.system,
       editable: this.isEditable,
@@ -175,36 +209,14 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         ...entry,
         selected: entry.id === this.actor.system.equipment?.packageId
       })),
-      inventory: this.actor.items.map(item => {
-        const quantity = Math.max(0, Number(item.system.quantity ?? 1));
-        const resourceMax = Math.max(0, Number(item.system.resource?.max ?? 0));
-        const resourceValue = Math.max(0, Number(item.system.resource?.value ?? 0));
-        return {
-          id: item.id,
-          name: item.name,
-          img: item.img,
-          type: item.type,
-          typeLabel: item.type.charAt(0).toUpperCase() + item.type.slice(1),
-          registryId: item.system.registryId,
-          quantity,
-          load: Number(item.system.load ?? 0),
-          aggregateLoad: Number(item.system.load ?? 0) * quantity,
-          ready: Boolean(item.system.ready),
-          worn: Boolean(item.system.worn),
-          carryLocation: item.system.wearLocation || item.system.carryLocation || "—",
-          configuration: item.system.configuration || item.system.grip || "—",
-          hasResource: resourceMax > 0,
-          resourceValue,
-          resourceMax,
-          resourceUnit: item.system.resource?.unit || "",
-          isWeapon: item.type === "weapon",
-          canReload: item.type === "weapon" && resourceMax > 0 && Boolean(item.system.ammunitionType),
-          itemRating: Number(item.system.itemRating ?? 0)
-        };
-      }),
-      totalLoad: this.actor.items.reduce((total, item) => {
-        return total + (Number(item.system.load ?? 0) * Math.max(0, Number(item.system.quantity ?? 1)));
-      }, 0)
+      inventory,
+      totalLoad,
+      encumbrance: {
+        ...encumbrance,
+        effectiveStrength: currentStrength,
+        display: `${encumbrance.category} - EP ${encumbrance.penalty}`
+      },
+      statuses: []
     }, { inplace: false });
   }
 
@@ -373,15 +385,81 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     }
   }
 
+  static async #onEditPortrait(event) {
+    event.preventDefault();
+
+    if (!this.#editMode) {
+      ui.notifications.warn("Enable Actor Edit mode before changing the portrait.");
+      return;
+    }
+
+    if (!this.actor.isOwner && !game.user.isGM) {
+      ui.notifications.warn(`You do not have permission to edit ${this.actor.name}.`);
+      return;
+    }
+
+    const picker = new FilePicker({
+      type: "image",
+      current: this.actor.img,
+      callback: async path => {
+        if (!path) return;
+        await this.actor.update({img: path});
+
+        for (const token of this.actor.getActiveTokens?.(true, true) ?? []) {
+          if (token.document?.actorLink) {
+            await token.document.update({"texture.src": path});
+          }
+        }
+
+        await this.render();
+      }
+    });
+
+    picker.render(true);
+  }
+
   static async #onToggleEditMode(event) {
     event.preventDefault();
+
+    const leavingEditMode = this.#editMode;
     this.#editMode = !this.#editMode;
+
+    if (leavingEditMode) {
+      const updates = {};
+
+      for (const attribute of ATTRIBUTE_DEFINITIONS) {
+        const base = Math.max(
+          1,
+          Math.min(
+            9,
+            Math.trunc(Number(this.actor.system.attributes?.[attribute.key]?.base ?? 1))
+          )
+        );
+        updates[`system.attributes.${attribute.key}.base`] = base;
+        updates[`system.attributes.${attribute.key}.current`] = base;
+      }
+
+      const baseHealth = updates["system.attributes.health.base"];
+      const baseEssence = updates["system.attributes.essence.base"];
+      const hpCurrent = Number(this.actor.system.resources?.health?.value ?? baseHealth);
+      const mpCurrent = Number(this.actor.system.resources?.magic?.value ?? baseEssence);
+
+      updates["system.resources.health.max"] = baseHealth;
+      updates["system.resources.health.value"] = Math.min(hpCurrent, baseHealth);
+      updates["system.resources.magic.max"] = baseEssence;
+      updates["system.resources.magic.value"] = Math.min(mpCurrent, baseEssence);
+
+      await this.actor.update(updates);
+      ui.notifications.info(
+        "Actor Edit mode disabled. Attributes and derived HP/MP values were synchronized."
+      );
+    } else {
+      ui.notifications.info(
+        "Actor Edit mode enabled. Base Attributes and portrait can now be changed."
+      );
+    }
+
     await this.render();
-    ui.notifications.info(
-      this.#editMode
-        ? "Actor Edit mode enabled. The portrait can now be changed."
-        : "Actor Edit mode disabled. The portrait is locked."
-    );
   }
 
   static async #adjustResource(sheet, resourceKey, delta) {
@@ -627,6 +705,25 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     };
   }
 
+  static #encumbranceFrom(load, strength) {
+    const L = Math.max(0, Number(load) || 0);
+    const S = Math.max(0, Number(strength) || 0);
+    const thresholds = {
+      none: S,
+      light: 2 * S,
+      medium: 3 * S,
+      heavy: 4 * S,
+      extreme: 5 * S
+    };
+
+    if (L > thresholds.extreme) return {category: "Overloaded", penalty: 5, thresholds};
+    if (L > thresholds.heavy) return {category: "Extreme", penalty: 4, thresholds};
+    if (L > thresholds.medium) return {category: "Heavy", penalty: 3, thresholds};
+    if (L > thresholds.light) return {category: "Medium", penalty: 2, thresholds};
+    if (L > thresholds.none) return {category: "Light", penalty: 1, thresholds};
+    return {category: "None", penalty: 0, thresholds};
+  }
+
   static #tokenForActor(actor) {
     if (!canvas?.ready) return null;
     return canvas.tokens.placeables.find(token => token.actor?.id === actor.id) ?? null;
@@ -824,9 +921,17 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     `;
 
     const result = await DialogV2.wait({
+      classes: ["aec-attack-window"],
+      position: {
+        width: 720,
+        height: Math.min(820, Math.max(520, window.innerHeight - 80))
+      },
       window: {
         title: `${this.actor.name}: Attack with ${weapon.name}`,
-        classes: ["aec-attack-window"]
+        contentClasses: ["aec-attack-window-content"],
+        positioned: true,
+        resizable: true,
+        minimizable: true
       },
       content,
       buttons: [
@@ -857,7 +962,27 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         {action: "cancel", label: "Cancel"}
       ],
       modal: true,
-      rejectClose: false
+      rejectClose: false,
+      render: (_event, dialog) => {
+        const element = dialog.element;
+        if (!element) return;
+
+        const viewportHeight = Math.max(520, window.innerHeight - 32);
+        element.style.maxHeight = `${viewportHeight}px`;
+
+        const contentElement = element.querySelector(".window-content");
+        if (contentElement) {
+          contentElement.style.minHeight = "0";
+          contentElement.style.overflow = "hidden";
+        }
+
+        const attackForm = element.querySelector(".aec-attack-dialog");
+        if (attackForm) {
+          attackForm.style.minHeight = "0";
+          attackForm.style.overflowY = "auto";
+          attackForm.style.overscrollBehavior = "contain";
+        }
+      }
     });
 
     if (!result || result === "cancel") return;

@@ -780,22 +780,6 @@
 }
 
 
-/* v0.0.13: attack-dialog viewport and scrolling fix */
-
-.aec-attack-window {
-  max-height: calc(100vh - 2rem);
-}
-
-.aec-attack-window .window-content {
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.aec-attack-window .aec-attack-dialog {
-  min-height: 0;
-  padding-right: 0.25rem;
-}
 
 
 /* v0.0.14: larger Actor sheet defaults */
@@ -847,3 +831,71 @@
   font-size: 0.7rem;
   opacity: 0.65;
 }
+
+
+/* v0.0.16: structural DialogV2 attack-window layout */
+
+.aec-attack-window {
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+}
+
+.aec-attack-window .window-content,
+.aec-attack-window-content {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.aec-attack-window .window-content > form {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.aec-attack-window .aec-attack-dialog {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0.25rem 0.65rem 0.75rem 0.25rem;
+}
+
+.aec-attack-window .form-footer {
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0;
+  padding-top: 0.5rem;
+  background: var(--background);
+}
+
+.aec-attack-window .window-resize-handle {
+  display: block;
+}
+
+
+/* v0.0.17: Edit mode, Encumbrance, and Statuses */
+.aec-portrait-editable[data-action="editPortrait"] { cursor: pointer; }
+
+.aec-encumbrance-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-light-secondary);
+  font-size: 0.72rem;
+}
+
+.aec-statuses-panel { margin-top: 0.75rem; }
+.aec-status-list { display: grid; gap: 0.35rem; }
+.aec-status-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+}
+.aec-empty-state { margin: 0; opacity: 0.65; font-style: italic; }

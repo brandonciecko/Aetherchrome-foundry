@@ -16,7 +16,7 @@
 
   <header class="aec-sheet-header">
     {{#if portraitEditable}}
-    <img src="{{actor.img}}" data-edit="img" alt="{{actor.name}}" class="aec-portrait-editable" title="Click to change portrait">
+    <img src="{{actor.img}}" data-action="editPortrait" alt="{{actor.name}}" class="aec-portrait-editable" title="Click to change portrait">
     {{else}}
     <img src="{{actor.img}}" alt="{{actor.name}}" title="Enable Edit mode to change portrait">
     {{/if}}
@@ -40,7 +40,7 @@
       <div class="aec-attribute-card">
         <div class="aec-attribute-name"><strong>{{localize attribute.label}}</strong><span>{{attribute.abbreviation}}</span></div>
         <label><span>{{localize "AETHERCHROME.Base"}}</span>
-          <input name="system.attributes.{{attribute.key}}.base" type="number" value="{{attribute.value.base}}" min="1" {{disabled (not ../editable)}}>
+          <input name="system.attributes.{{attribute.key}}.base" type="number" value="{{attribute.value.base}}" min="1" max="9" {{disabled (not ../editMode)}}>
         </label>
         <label><span>{{localize "AETHERCHROME.Current"}}</span>
           <input name="system.attributes.{{attribute.key}}.current" type="number" value="{{attribute.value.current}}" min="0" {{disabled (not ../editable)}}>
@@ -202,8 +202,18 @@
       </label>
       <label>
         <span>Current Encumbrance</span>
-        <input name="system.equipment.currentEncumbrance" type="text" value="{{system.equipment.currentEncumbrance}}" {{disabled (not editable)}}>
+        <input type="text" value="{{encumbrance.display}}" readonly>
       </label>
+    </div>
+
+    <div class="aec-encumbrance-summary">
+      <span><strong>Effective STR:</strong> {{encumbrance.effectiveStrength}}</span>
+      <span><strong>None:</strong> 0-{{encumbrance.thresholds.none}}</span>
+      <span><strong>Light:</strong> &gt;{{encumbrance.thresholds.none}}-{{encumbrance.thresholds.light}}</span>
+      <span><strong>Medium:</strong> &gt;{{encumbrance.thresholds.light}}-{{encumbrance.thresholds.medium}}</span>
+      <span><strong>Heavy:</strong> &gt;{{encumbrance.thresholds.medium}}-{{encumbrance.thresholds.heavy}}</span>
+      <span><strong>Extreme:</strong> &gt;{{encumbrance.thresholds.heavy}}-{{encumbrance.thresholds.extreme}}</span>
+      <span><strong>Overloaded:</strong> &gt;{{encumbrance.thresholds.extreme}}</span>
     </div>
 
     <div class="aec-inventory-header">
@@ -296,6 +306,23 @@
   <section class="aec-panel aec-notes">
     <h2>{{localize "AETHERCHROME.Notes"}}</h2>
     <textarea name="system.notes" {{disabled (not editable)}}>{{system.notes}}</textarea>
+  </section>
+
+  <section class="aec-panel aec-statuses-panel">
+    <h2>Statuses</h2>
+    {{#if statuses.length}}
+    <div class="aec-status-list">
+      {{#each statuses as |status|}}
+      <div class="aec-status-row">
+        <strong>{{status.name}}</strong>
+        <span>{{status.intensity}}</span>
+        <span>{{status.source}}</span>
+      </div>
+      {{/each}}
+    </div>
+    {{else}}
+    <p class="aec-empty-state">No active Statuses</p>
+    {{/if}}
   </section>
 
   <footer class="aec-sheet-footer">

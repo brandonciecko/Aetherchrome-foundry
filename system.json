@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome: Alpha",
-  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.15 is a maintenance and sheet-cleanup release adding reliable field persistence, Skill hierarchy validation, negative MP support, Alpha Task cleanup, portrait Edit mode, validation feedback, and sheet version identification.",
-  "version": "0.0.15",
+  "description": "Native Foundry VTT system for Aetherchrome. Version 0.0.17 improves Actor Edit mode, portrait selection, Base Attribute locking, Edit-exit derived-stat synchronization, automatic Encumbrance display, and adds a Statuses placeholder.",
+  "version": "0.0.17",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -49,7 +49,7 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.15/aetherchrome-v0.0.15.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.17/aetherchrome-v0.0.17.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",
