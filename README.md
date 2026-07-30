@@ -1,6 +1,6 @@
 # Aetherchrome Foundry VTT System
 
-## Version 0.0.12 — Scene Targeting and Applied Damage
+## Version 0.0.15 — Actor Sheet Maintenance
 
 This Foundry VTT v14 milestone adds the first playable implementation of Aetherchrome Core Resolution.
 
@@ -146,3 +146,19 @@ subtract net HP Damage directly from the target.
 
 Active Defense, Shield Block, Called Shot, and full hit-location automation are
 not included in this milestone.
+
+
+## Actor-sheet maintenance
+
+Actor forms now submit changed fields automatically. Skill ratings use an
+additional validated persistence path that enforces the Base Skill hierarchy:
+a child cannot exceed its immediate parent, and lowering a parent lowers any
+now-illegal descendants.
+
+Current MP may fall below 0 and remains capped only at Maximum MP. The Actor
+sheet also includes a session-only Edit toggle. Portrait changes are available
+only while Edit mode is enabled.
+
+The Alpha campaign profile now excludes the retired Alpha Tasks and the
+Triggered Skill while preserving their universal catalog records for possible
+future campaign use.

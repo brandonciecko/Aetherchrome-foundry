@@ -1,5 +1,61 @@
 # Changelog
 
+## 0.0.15 — 2026-07-29
+
+### Fixed
+
+- Actor-sheet fields now submit when changed.
+- Skill ratings persist after closing and reopening the Actor sheet.
+- Skill-rating changes are also written directly through a validated Skill handler.
+- Current MP may now persist below 0.
+- MP decrement and Effort expenditure no longer use the temporary tracker floor.
+
+### Added
+
+- Child Skills cannot exceed their immediate parent Skill.
+- Root Skills retain the Base Skill cap of 10.
+- Lowering a parent automatically lowers illegal descendant ratings.
+- Validation notifications identify parent limits and descendant adjustments.
+- Actor-sheet Edit toggle.
+- Portrait changes are locked until Edit mode is enabled.
+- Actor-sheet version label for playtest screenshots and bug reports.
+- Campaign-profile Task availability.
+
+### Removed from Alpha availability
+
+- Fight: Recognize Violence.
+- Fight: Improvised Aggression.
+- Fight: Fight Shove.
+- Melee: Basic Melee Attack.
+- Melee: Basic Parry.
+- Melee: Improvised Block.
+- Acrobatics: Recover Balance.
+- Ranged specialization: Triggered.
+- Actor-sheet Diagnostics section and diagnostic-roll action.
+
+### Compatibility
+
+- Universal Skill and Task catalog records remain present for future campaign profiles.
+- The cleanup is applied through the `alpha-01` campaign profile.
+- Existing Actors retain stored values for hidden records, but those records no longer appear in Alpha.
+
+## 0.0.14 — 2026-07-29
+
+### Changed
+
+- Actor sheets now open at a larger default size: 980 × 820 pixels.
+- Actor sheets remain manually resizable.
+- Added conservative minimum dimensions to prevent the layout from collapsing too narrowly.
+
+## 0.0.13 — 2026-07-29
+
+### Fixed
+
+- Attack dialog now has a dedicated application class.
+- Attack dialog height is constrained to the visible browser viewport.
+- Attack dialog content now scrolls vertically when its fields exceed the available height.
+- Overscroll is contained within the dialog instead of moving the underlying Scene.
+
 ## 0.0.12 — 2026-07-29
 
 ### Added

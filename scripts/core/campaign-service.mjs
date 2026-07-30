@@ -27,6 +27,10 @@ export class AetherchromeCampaignService {
     return [...(this.profile?.availability?.items ?? [])];
   }
 
+  getAvailableTaskIds() {
+    return [...(this.profile?.availability?.tasks ?? [])];
+  }
+
   getEquipmentPackages() {
     return foundry.utils.deepClone(this.profile?.equipmentPackages ?? []);
   }
@@ -47,7 +51,8 @@ export class AetherchromeCampaignService {
     const sets = {
       skill: this.getAvailableSkillIds(),
       trait: this.getAvailableTraitIds(),
-      item: this.getAvailableItemIds()
+      item: this.getAvailableItemIds(),
+      task: this.getAvailableTaskIds()
     };
     return (sets[String(type).toLowerCase()] ?? []).includes(id);
   }

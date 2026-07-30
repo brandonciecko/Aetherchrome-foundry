@@ -1,10 +1,25 @@
 <form class="{{cssClass}}" autocomplete="off">
-  <div class="aec-campaign-badge" title="World campaign profile">
-    {{campaign.name}}{{#if campaign.version}} · {{campaign.version}}{{/if}}
+  <div class="aec-sheet-toolbar">
+    <button
+      type="button"
+      class="aec-edit-toggle{{#if editMode}} is-active{{/if}}"
+      data-action="toggleEditMode"
+      title="Toggle portrait editing"
+      {{disabled (not editable)}}>
+      <i class="fa-solid {{#if editMode}}fa-lock-open{{else}}fa-lock{{/if}}"></i>
+      Edit
+    </button>
+    <div class="aec-campaign-badge" title="World campaign profile">
+      {{campaign.name}}{{#if campaign.version}} · {{campaign.version}}{{/if}}
+    </div>
   </div>
 
   <header class="aec-sheet-header">
-    <img src="{{actor.img}}" data-edit="img" alt="{{actor.name}}">
+    {{#if portraitEditable}}
+    <img src="{{actor.img}}" data-edit="img" alt="{{actor.name}}" class="aec-portrait-editable" title="Click to change portrait">
+    {{else}}
+    <img src="{{actor.img}}" alt="{{actor.name}}" title="Enable Edit mode to change portrait">
+    {{/if}}
     <div class="aec-identity">
       <label><span>{{localize "AETHERCHROME.Name"}}</span>
         <input name="name" type="text" value="{{actor.name}}" {{disabled (not editable)}}>
@@ -125,7 +140,9 @@
           type="number"
           value="{{skill.rating}}"
           min="0"
-          max="10"
+          max="{{skill.maxRating}}"
+          data-skill-id="{{skill.id}}"
+          data-parent-name="{{skill.parentName}}"
           aria-label="{{skill.name}} rating"
           {{disabled (not ../editable)}}>
         {{#if skill.hasTasks}}
@@ -275,20 +292,16 @@
     </div>
   </section>
 
-  <section class="aec-panel aec-compact-panel">
-    <h2>{{localize "AETHERCHROME.Diagnostics"}}</h2>
-    <button type="button" data-action="diagnosticRoll"><i class="fa-solid fa-dice-d10"></i> {{localize "AETHERCHROME.RollDiagnostic"}}</button>
-    <p>{{localize "AETHERCHROME.DiagnosticNote"}}</p>
-  </section>
 
   <section class="aec-panel aec-notes">
     <h2>{{localize "AETHERCHROME.Notes"}}</h2>
     <textarea name="system.notes" {{disabled (not editable)}}>{{system.notes}}</textarea>
   </section>
 
-  {{#if editable}}
   <footer class="aec-sheet-footer">
+    <span class="aec-sheet-version">Aetherchrome v{{systemVersion}}</span>
+    {{#if editable}}
     <button type="submit"><i class="fa-solid fa-floppy-disk"></i> {{localize "AETHERCHROME.Save"}}</button>
+    {{/if}}
   </footer>
-  {{/if}}
 </form>

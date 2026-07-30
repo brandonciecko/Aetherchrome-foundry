@@ -17,7 +17,7 @@ function dataKey(skillId) {
   return skillId.toLowerCase().replace("skl-", "").replaceAll("-", "_");
 }
 
-function buildTree(actor, availableSkillIds) {
+function buildTree(actor, availableSkillIds, availableTaskIds) {
   const byParent = new Map();
   for (const skill of SKILL_CATALOG.filter(entry => availableSkillIds.has(entry.id))) {
     const parent = skill.parentId ?? "ROOT";
@@ -30,7 +30,7 @@ function buildTree(actor, availableSkillIds) {
     const key = dataKey(skill.id);
     const record = actor.system.skillTree[key];
     const tasks = TASK_CATALOG
-      .filter(task => task.skillId === skill.id)
+      .filter(task => task.skillId === skill.id && availableTaskIds.has(task.id))
       .map(task => ({...task, selected: task.id === record.selectedTask}));
 
     return {
@@ -70,12 +70,20 @@ function signedNumber(value) {
 }
 
 export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
+  #editMode = false;
+
   static DEFAULT_OPTIONS = {
     classes: ["aetherchrome", "actor-sheet"],
-    position: { width: 860, height: 780 },
-    form: { closeOnSubmit: false },
+    position: {
+      width: 980,
+      height: 820
+    },
+    form: {
+      closeOnSubmit: false,
+      submitOnChange: true
+    },
     actions: {
-      diagnosticRoll: AetherchromeActorSheet.#onDiagnosticRoll,
+      toggleEditMode: AetherchromeActorSheet.#onToggleEditMode,
       taskDetails: AetherchromeActorSheet.#onTaskDetails,
       pressureDecrease: AetherchromeActorSheet.#onPressureDecrease,
       pressureIncrease: AetherchromeActorSheet.#onPressureIncrease,
@@ -109,7 +117,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const context = await super._prepareContext(options);
     const expansion = await this.#getSkillExpansion();
     const availableSkillIds = new Set(game.aetherchrome.campaign.getAvailableSkillIds());
-    const allRows = flattenTree(buildTree(this.actor, availableSkillIds));
+    const availableTaskIds = new Set(game.aetherchrome.campaign.getAvailableTaskIds());
+    const allRows = flattenTree(buildTree(this.actor, availableSkillIds, availableTaskIds));
     const hiddenDepths = [];
 
     const skillRows = allRows.map(row => {
@@ -120,11 +129,21 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
 
       if (hasChildren && !expanded) hiddenDepths.push(row.depth);
 
+      const parent = row.parentId
+        ? SKILL_CATALOG.find(skill => skill.id === row.parentId)
+        : null;
+      const parentRating = parent
+        ? Number(this.actor.system.skillTree[dataKey(parent.id)]?.rating ?? 0)
+        : 10;
+
       return {
         ...row,
         hasChildren,
         expanded,
-        hidden
+        hidden,
+        parentName: parent?.name ?? "",
+        parentRating,
+        maxRating: parent ? parentRating : 10
       };
     });
 
@@ -132,6 +151,9 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       actor: this.actor,
       system: this.actor.system,
       editable: this.isEditable,
+      editMode: this.#editMode,
+      portraitEditable: this.isEditable && this.#editMode,
+      systemVersion: game.system.version,
       attributes: ATTRIBUTE_DEFINITIONS.map(definition => ({
         ...definition,
         label: `AETHERCHROME.Attribute${definition.label}`,
@@ -191,8 +213,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const attributeKey = isHealth ? "health" : "essence";
     const maximum = Math.max(0, Number(this.actor.system.attributes[attributeKey]?.base ?? 0));
     const storedValue = Number(this.actor.system.resources[resourceKey]?.value ?? maximum);
-    const minimum = -5 * maximum;
-    const value = Math.max(minimum, Math.min(maximum, storedValue));
+    const minimum = isHealth ? -5 * maximum : null;
+    const value = isHealth
+      ? Math.max(minimum, Math.min(maximum, storedValue))
+      : Math.min(maximum, storedValue);
 
     let state = "normal";
     let threshold = null;
@@ -218,7 +242,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       minimum,
       state,
       threshold,
-      atMinimum: value <= minimum,
+      atMinimum: minimum !== null && value <= minimum,
       atMaximum: value >= maximum
     };
   }
@@ -261,18 +285,110 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     await game.user.setFlag("aetherchrome", "skillTreeExpansion", stored);
   }
 
-  static async #onDiagnosticRoll(event) {
-    event.preventDefault();
-    const roll = await new Roll("1d10").evaluate();
-    await roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-      flavor: `${this.actor.name}: Aetherchrome diagnostic d10`
+  _onRender(context, options) {
+    super._onRender(context, options);
+
+    this.element
+      ?.querySelectorAll('input[data-skill-id]')
+      .forEach(input => {
+        input.addEventListener("change", async event => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          await this.#persistSkillRating(event.currentTarget);
+        }, {capture: true});
+      });
+  }
+
+  async #persistSkillRating(input) {
+    const skillId = String(input.dataset.skillId ?? "");
+    const skill = SKILL_CATALOG.find(entry => entry.id === skillId);
+    if (!skill) return;
+
+    const requested = Math.max(0, Math.min(10, Math.trunc(Number(input.value) || 0)));
+    const parent = skill.parentId
+      ? SKILL_CATALOG.find(entry => entry.id === skill.parentId)
+      : null;
+    const parentRating = parent
+      ? Number(this.actor.system.skillTree[dataKey(parent.id)]?.rating ?? 0)
+      : 10;
+    const legalRating = Math.min(requested, parentRating);
+    const updates = {
+      [`system.skillTree.${dataKey(skill.id)}.rating`]: legalRating
+    };
+    const loweredDescendants = [];
+
+    const descendants = SKILL_CATALOG.filter(entry => {
+      let cursor = entry;
+      while (cursor?.parentId) {
+        if (cursor.parentId === skill.id) return true;
+        cursor = SKILL_CATALOG.find(candidate => candidate.id === cursor.parentId);
+      }
+      return false;
     });
+
+    const proposedRatings = new Map(
+      SKILL_CATALOG.map(entry => [
+        entry.id,
+        entry.id === skill.id
+          ? legalRating
+          : Number(this.actor.system.skillTree[dataKey(entry.id)]?.rating ?? 0)
+      ])
+    );
+
+    const ordered = descendants.sort((a, b) => {
+      const depth = entry => {
+        let value = 0;
+        let cursor = entry;
+        while (cursor?.parentId) {
+          value += 1;
+          cursor = SKILL_CATALOG.find(candidate => candidate.id === cursor.parentId);
+        }
+        return value;
+      };
+      return depth(a) - depth(b);
+    });
+
+    for (const descendant of ordered) {
+      const current = proposedRatings.get(descendant.id) ?? 0;
+      const limit = proposedRatings.get(descendant.parentId) ?? 0;
+      if (current > limit) {
+        proposedRatings.set(descendant.id, limit);
+        updates[`system.skillTree.${dataKey(descendant.id)}.rating`] = limit;
+        loweredDescendants.push(`${descendant.name} ${current}→${limit}`);
+      }
+    }
+
+    input.value = String(legalRating);
+    await this.actor.update(updates);
+
+    if (requested > legalRating && parent) {
+      ui.notifications.warn(
+        `${skill.name} cannot exceed parent Skill ${parent.name} ${parentRating}.`
+      );
+    }
+    if (loweredDescendants.length) {
+      ui.notifications.warn(
+        `Lowering ${skill.name} also adjusted: ${loweredDescendants.join(", ")}.`
+      );
+    }
+  }
+
+  static async #onToggleEditMode(event) {
+    event.preventDefault();
+    this.#editMode = !this.#editMode;
+    await this.render();
+    ui.notifications.info(
+      this.#editMode
+        ? "Actor Edit mode enabled. The portrait can now be changed."
+        : "Actor Edit mode disabled. The portrait is locked."
+    );
   }
 
   static async #adjustResource(sheet, resourceKey, delta) {
     const context = sheet.#resourceContext(resourceKey);
-    const next = Math.max(context.minimum, Math.min(context.maximum, context.value + delta));
+    const next = resourceKey === "health"
+      ? Math.max(context.minimum, Math.min(context.maximum, context.value + delta))
+      : Math.min(context.maximum, context.value + delta);
     await sheet.actor.update({[`system.resources.${resourceKey}.value`]: next});
   }
 
@@ -351,11 +467,6 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
             }
 
             const nextMp = live.value - cost;
-            if (nextMp < live.minimum) {
-              ui.notifications.warn(`MP cannot fall below ${live.minimum} in this Alpha tracker.`);
-              return;
-            }
-
             const update = {"system.resources.magic.value": nextMp};
             if (effort === "openSkill") update["system.resources.effort.openSkill"] = true;
             if (effort === "activeDefense") update["system.resources.effort.activeDefense"] = true;
@@ -713,7 +824,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     `;
 
     const result = await DialogV2.wait({
-      window: {title: `${this.actor.name}: Attack with ${weapon.name}`},
+      window: {
+        title: `${this.actor.name}: Attack with ${weapon.name}`,
+        classes: ["aec-attack-window"]
+      },
       content,
       buttons: [
         {
