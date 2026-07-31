@@ -1,8 +1,8 @@
 {
   "id": "aetherchrome",
   "title": "Aetherchrome: Alpha",
-  "description": "Aetherchrome v0.0.21 updates the HP track, repairs Task search and chat containment, and replaces the system background.",
-  "version": "0.0.21",
+  "description": "Aetherchrome v0.0.22 synchronizes Alpha initiative, movement, Tasks, locations, Armor, injuries, Traits, equipment ownership, and Actor-sheet foundations.",
+  "version": "0.0.22",
   "compatibility": {
     "minimum": 14,
     "verified": 14,
@@ -37,7 +37,8 @@
       "shield": {},
       "gear": {},
       "ammunition": {},
-      "package": {}
+      "package": {},
+      "trait": {}
     }
   },
   "initiative": "1d10",
@@ -49,7 +50,7 @@
   "socket": false,
   "url": "https://github.com/brandonciecko/Aetherchrome-foundry",
   "manifest": "https://raw.githubusercontent.com/brandonciecko/Aetherchrome-foundry/main/system.json",
-  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.21/aetherchrome-v0.0.21.zip",
+  "download": "https://github.com/brandonciecko/Aetherchrome-foundry/releases/download/v0.0.22/aetherchrome-v0.0.22.zip",
   "license": "LICENSE",
   "readme": "README.md",
   "changelog": "CHANGELOG.md",

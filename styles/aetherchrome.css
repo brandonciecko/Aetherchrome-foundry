@@ -1129,3 +1129,34 @@
 #sidebar.collapsed .message-content .aec-chat-card {
   display: none;
 }
+
+/* v0.0.22 Alpha synchronization */
+.aec-reference-grid,
+.aec-armor-summary,
+.aec-trait-summary,
+.aec-load-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .45rem;
+}
+.aec-reference-grid > *,
+.aec-armor-summary > div,
+.aec-trait-summary > div,
+.aec-injury-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .45rem;
+  border: 1px solid var(--color-border-light-secondary);
+}
+.aec-reference-grid small,
+.aec-trait-summary span { opacity: .75; }
+.aec-validation-issue {
+  margin: .25rem 0;
+  padding: .35rem .5rem;
+  border-left: 3px solid var(--color-border-highlight);
+}
+.aec-inventory-header,
+.aec-inventory-row {
+  grid-template-columns: minmax(190px, 1.4fr) 86px 70px 78px minmax(110px, .8fr) minmax(120px, .9fr) minmax(110px, .8fr) 118px;
+}

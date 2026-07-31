@@ -12,6 +12,13 @@ export class AetherchromeItemData extends foundry.abstract.TypeDataModel {
       itemRating: new fields.NumberField({
         required: true, nullable: false, integer: true, initial: 0
       }),
+      ownershipState: new fields.StringField({required: true, nullable: false, initial: "Owned"}),
+      issuingAuthority: new fields.StringField({required: true, nullable: false, initial: ""}),
+      supportDomain: new fields.StringField({required: true, nullable: false, initial: ""}),
+      loadGroup: new fields.StringField({required: true, nullable: false, initial: "Field"}),
+      accessClass: new fields.StringField({required: true, nullable: false, initial: "Accessible"}),
+      held: new fields.BooleanField({required: true, nullable: false, initial: false}),
+      wielded: new fields.BooleanField({required: true, nullable: false, initial: false}),
       quantity: new fields.NumberField({
         required: true, nullable: false, integer: true, initial: 1, min: 0
       }),
@@ -40,8 +47,19 @@ export class AetherchromeItemData extends foundry.abstract.TypeDataModel {
         max: new fields.NumberField({
           required: true, nullable: false, integer: true, initial: 0, min: 0
         }),
-        unit: new fields.StringField({required: true, nullable: false, initial: ""})
+        unit: new fields.StringField({required: true, nullable: false, initial: ""}),
+        defaultQuantity: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0, min: 0}),
+        refreshTiming: new fields.StringField({required: true, nullable: false, initial: ""}),
+        allocationRule: new fields.StringField({required: true, nullable: false, initial: ""})
       }),
+      traitId: new fields.StringField({required: true, nullable: false, initial: ""}),
+      traitClassification: new fields.StringField({required: true, nullable: false, initial: ""}),
+      traitRank: new fields.NumberField({required: true, nullable: false, integer: true, initial: 1, min: 0}),
+      traitOption: new fields.StringField({required: true, nullable: false, initial: ""}),
+      traitSource: new fields.StringField({required: true, nullable: false, initial: ""}),
+      traitAcquisition: new fields.StringField({required: true, nullable: false, initial: "Purchased"}),
+      traitPointValue: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0}),
+      traitEffect: new fields.HTMLField({required: true, nullable: false, initial: ""}),
       packageId: new fields.StringField({required: true, nullable: false, initial: ""}),
       packageRole: new fields.StringField({required: true, nullable: false, initial: ""}),
       notes: new fields.HTMLField({required: true, nullable: false, initial: ""})

@@ -129,13 +129,13 @@ export const SKILL_CATALOG = [
     "id": "SKL-WARFARE",
     "name": "Warfare",
     "recordType": "Skill",
-    "parentId": null,
+    "parentId": "SKL-KNOWLEDGE",
     "primaryAttribute": "INT"
   },
   {
     "id": "SKL-TACTICS",
     "name": "Tactics",
-    "recordType": "Skill",
+    "recordType": "Specialization",
     "parentId": "SKL-WARFARE",
     "primaryAttribute": "INT"
   },
@@ -187,6 +187,27 @@ export const SKILL_CATALOG = [
     "recordType": "Skill",
     "parentId": null,
     "primaryAttribute": "INT"
+  },
+  {
+    "id": "SKL-COMPOSURE",
+    "name": "Composure",
+    "recordType": "Skill",
+    "parentId": "SKL-FOCUS",
+    "primaryAttribute": "CHA"
+  },
+  {
+    "id": "SKL-CONCENTRATION",
+    "name": "Concentration",
+    "recordType": "Skill",
+    "parentId": "SKL-FOCUS",
+    "primaryAttribute": "INT"
+  },
+  {
+    "id": "SKL-SELF-CONTROL",
+    "name": "Self-Control",
+    "recordType": "Skill",
+    "parentId": "SKL-FOCUS",
+    "primaryAttribute": "ESS"
   }
 ];
 
@@ -268,6 +289,10 @@ export const TASK_CATALOG = [
     "typicalAttribute": "Base Attack",
     "status": "Active Working",
     "resolutionType": "Chained",
+    "testMode": "Inherited",
+    "timing": "Inherited",
+    "duration": "Inherited",
+    "composition": "Chained",
     "difficulty": "Use base Attack",
     "time": "Declared with a base Attack",
     "requirements": "A legal named hit location and legal base Attack",
@@ -338,6 +363,10 @@ export const TASK_CATALOG = [
     "typicalAttribute": "STR",
     "status": "Active Working",
     "resolutionType": "Chained",
+    "testMode": "Inherited",
+    "timing": "Inherited",
+    "duration": "Inherited",
+    "composition": "Chained",
     "difficulty": "Use base Attack",
     "time": "Declared with a base Attack",
     "requirements": "Eligible melee Attack with Ready melee weapon",
@@ -908,7 +937,7 @@ export const TASK_CATALOG = [
   {
     "id": "TASK-FOCUS-CENTER",
     "name": "Center",
-    "skillId": "SKL-FOCUS",
+    "skillId": "SKL-COMPOSURE",
     "typicalAttribute": "CHA",
     "status": "Provisional",
     "resolutionType": "Fixed",
@@ -936,8 +965,8 @@ export const TASK_CATALOG = [
   {
     "id": "TASK-FOCUS-ADJUST-TRAIT",
     "name": "Adjust Trait",
-    "skillId": "SKL-FOCUS",
-    "typicalAttribute": "AGL",
+    "skillId": "SKL-SELF-CONTROL",
+    "typicalAttribute": "ESS",
     "status": "Active Working",
     "resolutionType": "Fixed",
     "difficulty": "0",
@@ -950,7 +979,7 @@ export const TASK_CATALOG = [
   {
     "id": "TASK-FOCUS-TAKE-AIM",
     "name": "Take Aim",
-    "skillId": "SKL-FOCUS",
+    "skillId": "SKL-CONCENTRATION",
     "typicalAttribute": "INT",
     "status": "Active Working",
     "resolutionType": "Automatic",
@@ -964,7 +993,7 @@ export const TASK_CATALOG = [
   {
     "id": "TASK-FOCUS-JUGGLE",
     "name": "Juggle",
-    "skillId": "SKL-FOCUS",
+    "skillId": "SKL-CONCENTRATION",
     "typicalAttribute": "AGL",
     "status": "Active Working",
     "resolutionType": "Fixed",

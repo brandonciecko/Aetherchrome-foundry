@@ -234,3 +234,15 @@ canvas when the Foundry sidebar is collapsed.
 
 The prior system background asset has been removed and replaced with the current
 Aetherchrome: Alpha background.
+
+
+## v0.0.22 — Alpha rules synchronization
+
+This release adds the current Alpha foundations for Initiative, movement, Facing,
+Skill ownership, Task composition, authoritative hit Locations, location-based Armor,
+Location Injury allocation, Trait instances, equipment ownership, economic creation
+records, Supplies metadata, and player-facing validation.
+
+Some procedures remain intentionally advisory: cross-client Reactions, automatic Vital
+Injury rolls, map-drawn Facing arcs, Collision enforcement, full Trait economics,
+requisition workflows, and the unresolved allowance-conversion rounding method.

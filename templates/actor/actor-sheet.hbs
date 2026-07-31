@@ -24,8 +24,14 @@
       <label><span>{{localize "AETHERCHROME.Name"}}</span>
         <input name="name" type="text" value="{{actor.name}}" {{disabled (not editable)}}>
       </label>
+      <label><span>Player Name</span>
+        <input name="system.playerName" type="text" value="{{system.playerName}}" {{disabled (not editable)}}>
+      </label>
       <label><span>{{localize "AETHERCHROME.Concept"}}</span>
         <input name="system.concept" type="text" value="{{system.concept}}" {{disabled (not editable)}}>
+      </label>
+      <label><span>Short Description</span>
+        <input name="system.shortDescription" type="text" value="{{system.shortDescription}}" {{disabled (not editable)}}>
       </label>
     </div>
   </header>
@@ -99,6 +105,33 @@
           <i class="fa-solid fa-plus"></i>
         </button>
       </div>
+    </div>
+  </section>
+
+  <section class="aec-panel">
+    <div class="aec-section-heading"><h2>Combat and Movement Reference</h2><span>Current Alpha procedures</span></div>
+    <div class="aec-reference-grid">
+      <button type="button" data-action="rollInitiative"><strong>Initiative</strong><small>{{initiativeReference}}</small></button>
+      <button type="button" data-action="movementReference"><strong>Movement</strong><small>Step {{movementReference.step}} · Move {{movementReference.move}} · Sprint {{movementReference.sprint}}</small></button>
+      <div><strong>Dodge</strong><small>AGL/Dodge {{defenseReference.dodgeRating}} · signed Reaction result</small></div>
+      <div><strong>Facing</strong><small>Direction {{facing}}</small><button type="button" data-action="rotateFacingLeft">↶</button><button type="button" data-action="rotateFacingRight">↷</button></div>
+    </div>
+  </section>
+
+  <section class="aec-panel">
+    <div class="aec-section-heading"><h2>Armor and Injuries</h2><span>Detailed Locations remain authoritative</span></div>
+    <div class="aec-armor-summary">
+      {{#each armorSummary as |area|}}<div><strong>{{area.group}}</strong><span>{{area.value}} · {{area.source}}</span></div>{{/each}}
+    </div>
+    <div class="aec-injury-summary">
+      {{#each injuries as |injury|}}<div><strong>{{injury.location}}</strong><span>{{injury.effect}} · {{injury.source}}</span></div>{{else}}<em>No active Location Injuries.</em>{{/each}}
+    </div>
+  </section>
+
+  <section class="aec-panel">
+    <div class="aec-section-heading"><h2>Traits</h2><span>Advantage / Disadvantage / Feature instances</span></div>
+    <div class="aec-trait-summary">
+      {{#each traits as |trait|}}<div><strong>{{trait.name}}</strong><span>{{trait.ownershipState}} · {{trait.registryId}}</span></div>{{else}}<em>No embedded Trait items.</em>{{/each}}
     </div>
   </section>
 
@@ -214,33 +247,15 @@
     </div>
 
     <div class="aec-equipment-package">
-      <label>
-        <span>Alpha Equipment Package</span>
-        <select {{disabled (not editable)}}>
-          <option value="">Select Package…</option>
-          {{#each equipmentPackages as |package|}}
-          <option value="{{package.id}}" {{#if package.selected}}selected{{/if}}>
-            {{package.name}} — {{package.role}} (Load {{package.totalLoad}})
-          </option>
-          {{/each}}
-        </select>
-      </label>
-      <button type="button" data-action="applyEquipmentPackage" {{disabled (not editable)}}>
-        Apply Package
-      </button>
-      <label>
-        <span>Recorded Package ID</span>
-        <input name="system.equipment.packageId" type="text" value="{{system.equipment.packageId}}" readonly>
-      </label>
-      <label>
-        <span>Shield Arm</span>
-        <input name="system.equipment.shieldArm" type="text" value="{{system.equipment.shieldArm}}" {{disabled (not editable)}}>
-      </label>
-      <label>
-        <span>Current Encumbrance</span>
-        <input type="text" value="{{encumbrance.display}}" readonly>
-      </label>
+      <label><span>Wealth</span><input name="system.economy.wealth" type="text" value="{{system.economy.wealth}}" {{disabled (not editable)}}></label>
+      <label><span>Possession Allowance</span><input name="system.economy.possessionAllowance" type="number" value="{{system.economy.possessionAllowance}}" {{disabled (not editable)}}></label>
+      <label><span>Possession Value</span><input name="system.economy.possessionValue" type="number" value="{{system.economy.possessionValue}}" {{disabled (not editable)}}></label>
+      <label><span>Converted Funds</span><input name="system.economy.convertedFunds" type="number" value="{{system.economy.convertedFunds}}" {{disabled (not editable)}}></label>
+      <label><span>Current Funds</span><input name="system.economy.funds" type="number" value="{{system.economy.funds}}" {{disabled (not editable)}}></label>
+      <label><span>Current Encumbrance</span><input type="text" value="{{encumbrance.display}}" readonly></label>
+      <small>Equipment packages are optional loadout shortcuts, not a creation requirement. Conversion rounding remains Not Established.</small>
     </div>
+    <div class="aec-load-groups"><span>Field {{loadTotals.field}}</span><span>Travel {{loadTotals.travel}}</span><span>Optional {{loadTotals.optional}}</span></div>
 
     <div class="aec-encumbrance-summary">
       <span><strong>Effective STR:</strong> {{encumbrance.effectiveStrength}}</span>
@@ -258,6 +273,7 @@
       <span>Load</span>
       <span>Ready</span>
       <span>Carry / Wear</span>
+      <span>Ownership / Group</span>
       <span>Resource</span>
       <span>Controls</span>
     </div>
@@ -338,6 +354,11 @@
     </div>
   </section>
 
+
+  <section class="aec-panel">
+    <div class="aec-section-heading"><h2>Alpha Creation Validation</h2><span>Reports; does not block GM edits</span></div>
+    {{#each validation as |issue|}}<p class="aec-validation-issue">{{issue}}</p>{{else}}<p>No Attribute or starting Skill-range issues detected.</p>{{/each}}
+  </section>
 
   <section class="aec-panel aec-notes">
     <h2>{{localize "AETHERCHROME.Notes"}}</h2>

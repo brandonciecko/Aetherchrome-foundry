@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.0.22 — 2026-07-31
+
+### Alpha rules synchronization
+
+- Added Combat Initiative as Base Intelligence plus Agility/Fight successes.
+- Added Step, Move, Sprint, Withdrawal, and Facing references.
+- Added Composure, Concentration, and Self-Control to the Skill tree and moved current Focus-child Tasks.
+- Added current Task-structure fields for Chained combat records.
+- Called Shot now carries the selected struck Location through Armor, damage, and injury allocation.
+- Worn Armor is calculated automatically from Location coverage; a GM override remains available.
+- Added Location Injury allocation, Injury Limits, cascading, and location-bound Injured/Overwhelmed Status application.
+- Added Vital Location check prompts when Neck, Head, or Skull is Overwhelmed.
+- Corrected Shield Block success to create temporary Armor rather than reduce Aim.
+- Added Actor anatomy, Facing, Take Aim, economy, Trait-instance, equipment-ownership, load-group, and resource-profile foundations.
+- Removed mandatory package presentation from the player-facing equipment section.
+- Added Field, Travel, and Optional displayed Load totals.
+- Added Armor, Injury, Trait, movement, initiative, and Alpha validation panels.
+
+### Known automation boundaries
+
+- Active Defense remains same-client and resolves one selected Reaction in the attack workflow.
+- Vital Injury Checks are prompted but not automatically rolled.
+- Facing is recorded but scene-geometry arcs are not drawn.
+- Collision is not automatically enforced.
+- Field/Travel/Optional groups are organizational; the controlling active-Encumbrance selection rule is still Not Verified.
+- Full Trait pricing, requisition, services, downtime commerce, and conversion rounding remain outside this release.
+
 ## 0.0.21 — 2026-07-29
 
 ### HP track synchronization

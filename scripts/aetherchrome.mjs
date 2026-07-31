@@ -38,7 +38,8 @@ Hooks.once("init", () => {
     shield: AetherchromeItemData,
     gear: AetherchromeItemData,
     ammunition: AetherchromeItemData,
-    package: AetherchromeItemData
+    package: AetherchromeItemData,
+    trait: AetherchromeItemData
   };
 
   CONFIG.Actor.trackableAttributes = {
@@ -56,7 +57,7 @@ Hooks.once("init", () => {
   });
 
   DocumentSheetConfig.registerSheet(Item, "aetherchrome", AetherchromeItemSheet, {
-    types: ["weapon", "armor", "shield", "gear", "ammunition", "package"],
+    types: ["weapon", "armor", "shield", "gear", "ammunition", "package", "trait"],
     makeDefault: true,
     label: "AETHERCHROME.ItemSheet"
   });

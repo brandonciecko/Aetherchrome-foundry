@@ -31,7 +31,10 @@ const SKILL_KEYS = [
   "craft",
   "craft_weapons",
   "fletcher",
-  "focus"
+  "focus",
+  "composure",
+  "concentration",
+  "self_control"
 ];
 
 function attributeField() {
@@ -56,6 +59,16 @@ export class AetherchromeActorData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       concept: new fields.StringField({required: true, nullable: false, initial: ""}),
+      playerName: new fields.StringField({required: true, nullable: false, initial: ""}),
+      shortDescription: new fields.StringField({required: true, nullable: false, initial: ""}),
+      facing: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0, min: 0, max: 5}),
+      economy: new fields.SchemaField({
+        wealth: new fields.StringField({required: true, nullable: false, initial: "Ordinary"}),
+        possessionAllowance: new fields.NumberField({required: true, nullable: false, initial: 1000, min: 0}),
+        possessionValue: new fields.NumberField({required: true, nullable: false, initial: 0, min: 0}),
+        convertedFunds: new fields.NumberField({required: true, nullable: false, initial: 0, min: 0}),
+        funds: new fields.NumberField({required: true, nullable: false, initial: 20, min: 0})
+      }),
       equipment: new fields.SchemaField({
         packageId: new fields.StringField({required: true, nullable: false, initial: ""}),
         shieldArm: new fields.StringField({required: true, nullable: false, initial: ""}),
@@ -85,6 +98,23 @@ export class AetherchromeActorData extends foundry.abstract.TypeDataModel {
           pendingType: new fields.StringField({required: true, nullable: false, initial: ""}),
           pendingCost: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0, min: 0})
         })
+      }),
+      anatomy: new fields.ArrayField(
+        new fields.SchemaField({
+          id: new fields.StringField({required: true, nullable: false, initial: ""}),
+          name: new fields.StringField({required: true, nullable: false, initial: ""}),
+          parent: new fields.StringField({required: true, nullable: false, initial: ""}),
+          depth: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0, min: 0}),
+          laterality: new fields.StringField({required: true, nullable: false, initial: ""}),
+          locationType: new fields.StringField({required: true, nullable: false, initial: "standard"})
+        }),
+        {required: true, nullable: false, initial: []}
+      ),
+      takeAim: new fields.SchemaField({
+        active: new fields.BooleanField({required: true, nullable: false, initial: false}),
+        targetActorId: new fields.StringField({required: true, nullable: false, initial: ""}),
+        itemId: new fields.StringField({required: true, nullable: false, initial: ""}),
+        bonus: new fields.NumberField({required: true, nullable: false, integer: true, initial: 0, min: 0})
       }),
       statuses: new fields.ArrayField(
         new fields.SchemaField({

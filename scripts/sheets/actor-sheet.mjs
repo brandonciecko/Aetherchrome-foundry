@@ -31,21 +31,21 @@ const STATUS_CATALOG = [
 
 
 const HUMANOID_LOCATIONS = [
-  {name: "Torso", depth: 0},
-  {name: "Neck", depth: 1},
-  {name: "Left Arm", depth: 1},
-  {name: "Right Arm", depth: 1},
-  {name: "Left Leg", depth: 1},
-  {name: "Right Leg", depth: 1},
-  {name: "Head", depth: 2},
-  {name: "Left Hand", depth: 2},
-  {name: "Right Hand", depth: 2},
-  {name: "Left Foot", depth: 2},
-  {name: "Right Foot", depth: 2},
-  {name: "Skull", depth: 3},
-  {name: "Face", depth: 3},
-  {name: "Left Eye", depth: 4},
-  {name: "Right Eye", depth: 4}
+  {name: "Torso", parent: "", depth: 0, type: "root"},
+  {name: "Neck", parent: "Torso", depth: 1, type: "vital"},
+  {name: "Left Arm", parent: "Torso", depth: 1, type: "functional"},
+  {name: "Right Arm", parent: "Torso", depth: 1, type: "functional"},
+  {name: "Left Leg", parent: "Torso", depth: 1, type: "functional"},
+  {name: "Right Leg", parent: "Torso", depth: 1, type: "functional"},
+  {name: "Head", parent: "Neck", depth: 2, type: "vital"},
+  {name: "Left Hand", parent: "Left Arm", depth: 2, type: "functional"},
+  {name: "Right Hand", parent: "Right Arm", depth: 2, type: "functional"},
+  {name: "Left Foot", parent: "Left Leg", depth: 2, type: "functional"},
+  {name: "Right Foot", parent: "Right Leg", depth: 2, type: "functional"},
+  {name: "Skull", parent: "Head", depth: 3, type: "vital"},
+  {name: "Face", parent: "Head", depth: 3, type: "functional"},
+  {name: "Left Eye", parent: "Face", depth: 4, type: "functional"},
+  {name: "Right Eye", parent: "Face", depth: 4, type: "functional"}
 ];
 
 
@@ -150,6 +150,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       itemQuantityIncrease: AetherchromeActorSheet.#onItemQuantityIncrease,
       itemResourceDecrease: AetherchromeActorSheet.#onItemResourceDecrease,
       itemResourceIncrease: AetherchromeActorSheet.#onItemResourceIncrease,
+      rollInitiative: AetherchromeActorSheet.#onRollInitiative,
+      movementReference: AetherchromeActorSheet.#onMovementReference,
+      rotateFacingLeft: AetherchromeActorSheet.#onRotateFacingLeft,
+      rotateFacingRight: AetherchromeActorSheet.#onRotateFacingRight,
       weaponAttack: AetherchromeActorSheet.#onWeaponAttack,
       weaponReload: AetherchromeActorSheet.#onWeaponReload,
       applyEquipmentPackage: AetherchromeActorSheet.#onApplyEquipmentPackage
@@ -235,7 +239,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           resourceUnit: item.system.resource?.unit || "",
           isWeapon: item.type === "weapon",
           canReload: item.type === "weapon" && resourceMax > 0 && Boolean(item.system.ammunitionType),
-          itemRating: Number(item.system.itemRating ?? 0)
+          itemRating: Number(item.system.itemRating ?? 0),
+          ownershipState: item.system.ownershipState || "Owned",
+          issuingAuthority: item.system.issuingAuthority || "",
+          loadGroup: item.system.loadGroup || "Field",
+          accessClass: item.system.accessClass || "Accessible",
+          coverage: item.system.coverage || ""
         };      });
     const totalLoad = inventory.reduce((total, item) => total + item.aggregateLoad, 0);
     const currentStrength = Math.max(
@@ -243,6 +252,41 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       Number(this.actor.system.attributes?.strength?.current ?? 0)
     );
     const encumbrance = AetherchromeActorSheet.#encumbranceFrom(totalLoad, currentStrength);
+    const loadTotals = {
+      field: inventory.filter(item => item.loadGroup === "Field").reduce((n, item) => n + item.aggregateLoad, 0),
+      travel: inventory.filter(item => item.loadGroup === "Travel").reduce((n, item) => n + item.aggregateLoad, 0),
+      optional: inventory.filter(item => item.loadGroup === "Optional").reduce((n, item) => n + item.aggregateLoad, 0)
+    };
+    const traits = inventory.filter(item => item.type === "trait");
+    const injuries = this.#storedStatuses()
+      .filter(status => ["STS-LOCATION-INJURED", "STS-LOCATION-OVERWHEMED", "STS-LOCATION-OVERWHELMED"].includes(status.statusId))
+      .map(status => ({...status, effect: status.statusId === "STS-LOCATION-OVERWHELMED" ? "Overwhelmed" : "Injured"}));
+    const baseIntelligence = Number(this.actor.system.attributes?.intelligence?.base ?? 0);
+    const fightRating = Number(this.actor.system.skillTree?.fight?.rating ?? 0);
+    const dodgeRating = Number(this.actor.system.skillTree?.dodge?.rating ?? 0);
+    const runningRating = Number(this.actor.system.skillTree?.running?.rating ?? 0);
+    const armorSummary = ["Head","Torso","Arms","Hands","Legs","Feet"].map(group => {
+      const locations = {
+        Head: ["Head","Skull","Face","Left Eye","Right Eye","Neck"],
+        Torso: ["Torso"],
+        Arms: ["Left Arm","Right Arm"],
+        Hands: ["Left Hand","Right Hand"],
+        Legs: ["Left Leg","Right Leg"],
+        Feet: ["Left Foot","Right Foot"]
+      }[group];
+      const values = locations.map(location => AetherchromeActorSheet.#armorAtLocation(this.actor, location));
+      values.sort((a,b) => b.value-a.value);
+      return {group, value: values[0]?.value ?? 0, source: values[0]?.source ?? "None"};
+    });
+    const validation = [];
+    for (const attribute of ATTRIBUTE_DEFINITIONS) {
+      const base = Number(this.actor.system.attributes?.[attribute.key]?.base ?? 0);
+      if (base < 3 || base > 6) validation.push(`${attribute.label} ${base} is outside Alpha starting range 3–6.`);
+    }
+    for (const skill of SKILL_CATALOG) {
+      const rating = Number(this.actor.system.skillTree?.[dataKey(skill.id)]?.rating ?? 0);
+      if (rating > 6) validation.push(`${skill.name} ${rating} exceeds Alpha starting maximum 6.`);
+    }
 
         return foundry.utils.mergeObject(context, {
       actor: this.actor,
@@ -257,6 +301,15 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         value: this.actor.system.attributes[definition.key]
       })),
       skillRows,
+      initiativeReference: `Base INT ${baseIntelligence} + AGL/Fight successes`,
+      movementReference: {step: 1, move: 3, sprint: "3 + 2 × successes", runningRating},
+      defenseReference: {dodgeRating},
+      facing: Number(this.actor.system.facing ?? 0),
+      armorSummary,
+      injuries,
+      traits,
+      loadTotals,
+      validation,
       pressureAtMinimum: Number(this.actor.system.resources.pressure ?? 0) <= 0,
       pressureAtMaximum: Number(this.actor.system.resources.pressure ?? 0) >= 4,
       hp: this.#resourceContext("health"),
@@ -1221,25 +1274,85 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     return targets[0];
   }
 
-  static #torsoArmor(actor) {
-    const armorSources = actor.items
+  static #armorAtLocation(actor, locationName) {
+    const normalized = String(locationName ?? "Torso").toLowerCase();
+    const sources = actor.items
       .filter(item => item.type === "armor" && item.system.worn)
       .filter(item => {
         const coverage = String(item.system.coverage ?? "").toLowerCase();
-        return coverage.includes("torso") || coverage.includes("body") || coverage.includes("all");
+        if (!coverage) return false;
+        if (coverage.includes("all")) return true;
+        return coverage.split(/[;,]/).map(value => value.trim()).some(value => {
+          if (value === normalized) return true;
+          if (value === "arms") return normalized.includes("arm");
+          if (value === "hands") return normalized.includes("hand");
+          if (value === "legs") return normalized.includes("leg");
+          if (value === "feet") return normalized.includes("foot");
+          if (value === "head") return ["head","skull","face","left eye","right eye","neck"].includes(normalized);
+          return false;
+        });
       })
-      .map(item => ({
-        name: item.name,
-        value: Math.max(0, Number(item.system.itemRating ?? 0))
-      }));
+      .map(item => ({name: item.name, value: Math.max(0, Number(item.system.itemRating ?? 0))}))
+      .sort((a,b) => b.value-a.value);
+    return sources.length ? {value: sources[0].value, source: sources[0].name} : {value: 0, source: "None"};
+  }
 
-    if (!armorSources.length) return {value: 0, source: "None"};
+  static #injuryAllocation(locationName, damage) {
+    const allocations = [];
+    let remaining = Math.max(0, Number(damage) || 0);
+    let location = HUMANOID_LOCATIONS.find(entry => entry.name === locationName) ?? HUMANOID_LOCATIONS[0];
+    while (remaining > 0 && location) {
+      if (location.depth === 0) {
+        allocations.push({location: location.name, amount: remaining, state: "Root"});
+        break;
+      }
+      const limit = Math.max(1, 5 - location.depth);
+      const contained = Math.min(remaining, limit);
+      allocations.push({
+        location: location.name,
+        amount: contained,
+        limit,
+        state: contained >= limit ? "Overwhelmed" : "Injured",
+        type: location.type,
+        depth: location.depth
+      });
+      remaining -= contained;
+      location = HUMANOID_LOCATIONS.find(entry => entry.name === location.parent);
+    }
+    return allocations;
+  }
 
-    armorSources.sort((a, b) => b.value - a.value);
-    return {
-      value: armorSources[0].value,
-      source: armorSources[0].name
-    };
+  static async #applyLocationInjuries(actor, allocations, source) {
+    const statuses = Array.from(actor.system.statuses ?? []).map(status => foundry.utils.deepClone(status));
+    const checks = [];
+    for (const allocation of allocations.filter(entry => entry.state !== "Root")) {
+      const statusId = allocation.state === "Overwhelmed"
+        ? "STS-LOCATION-OVERWHELMED"
+        : "STS-LOCATION-INJURED";
+      const otherId = statusId === "STS-LOCATION-OVERWHELMED"
+        ? "STS-LOCATION-INJURED"
+        : "STS-LOCATION-OVERWHELMED";
+      const existingHigher = statuses.some(status => status.location === allocation.location && status.statusId === otherId);
+      if (statusId === "STS-LOCATION-INJURED" && existingHigher) continue;
+      for (let i=statuses.length-1; i>=0; i--) {
+        if (statuses[i].location === allocation.location && statuses[i].statusId === otherId) statuses.splice(i,1);
+      }
+      if (!statuses.some(status => status.location === allocation.location && status.statusId === statusId)) {
+        statuses.push({
+          id: foundry.utils.randomID(),
+          statusId,
+          name: allocation.state === "Overwhelmed" ? "Location Overwhelmed" : "Location Injured",
+          intensity: 1,
+          source,
+          location: allocation.location,
+          relatedActorId: "",
+          automatic: true
+        });
+      }
+      if (allocation.state === "Overwhelmed" && allocation.type === "vital") checks.push(allocation);
+    }
+    await actor.update({"system.statuses": statuses});
+    return checks;
   }
 
   static #encumbranceFrom(load, strength) {
@@ -1421,15 +1534,17 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     const rollThreshold = effectiveSkill === 0 ? chanceThreshold(threshold) : threshold;
     const roll = await new Roll(`${dice}d10`).evaluate();
     const successes = AetherchromeActorSheet.#countSuccesses(roll, rollThreshold);
-    const difficulty = Math.max(0, Number(task.defaultDifficulty ?? 0));
+    const isShieldBlock = task.id === "TASK-SHIELD-BLOCK-SELF";
+    const difficulty = isShieldBlock ? 1 : Math.max(0, Number(initialAim));
     const adjustment = successes >= difficulty
-      ? -successes
+      ? (isShieldBlock ? 0 : -successes)
       : Math.max(0, difficulty - successes);
+    const shieldArmor = isShieldBlock && successes >= difficulty ? successes : 0;
 
     await roll.toMessage({
       speaker: ChatMessage.getSpeaker({actor: targetActor}),
       flavor: `${targetActor.name} — ${task.name}`,
-      content: `<section class="aec-chat-card"><h3>${task.name}</h3><p>Successes ${successes}; Aim adjustment ${signedNumber(adjustment)}.</p></section>`
+      content: `<section class="aec-chat-card"><h3>${task.name}</h3><p>Successes ${successes}; ${isShieldBlock ? `temporary Armor ${shieldArmor}` : `Aim adjustment ${signedNumber(adjustment)}`}.</p></section>`
     });
 
     if (effort) {
@@ -1440,7 +1555,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       });
     }
 
-    return {adjustment, label: task.name};
+    return {adjustment, label: task.name, shieldArmor};
   }
 
   static async #onWeaponReload(event, target) {
@@ -1517,7 +1632,6 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       0,
       Number(targetActor.system.attributes?.agility?.current ?? 0)
     );
-    const torsoArmor = AetherchromeActorSheet.#torsoArmor(targetActor);
 
     if (!weapon.system.ready) {
       ui.notifications.warn(`${weapon.name} is not Ready.`);
@@ -1607,8 +1721,9 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <label><span>Damage Attribute</span>
             <select name="damageAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultDamageAttribute)}</select>
           </label>
-          <label><span>Armor at targeted Location</span><input name="armor" type="number" value="${torsoArmor.value}" min="0" step="1"></label>
-          <label><span>Armor source</span><input type="text" value="${foundry.utils.escapeHTML(torsoArmor.source)}" readonly></label>
+          <p class="aec-dialog-note">Persistent Armor is calculated automatically from worn item coverage at the struck Location.</p>
+          <label class="aec-checkbox-row"><input name="overrideArmor" type="checkbox"><span>Override calculated Armor</span></label>
+          <label><span>GM Armor override</span><input name="armorOverride" type="number" value="0" min="0" step="1"></label>
           <label class="aec-checkbox-row">
             <input name="applyDamage" type="checkbox" checked>
             <span>Apply resulting HP Damage to the targeted Actor</span>
@@ -1658,7 +1773,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
               calledShot: Boolean(form.elements.calledShot.checked),
               targetLocation: String(form.elements.targetLocation.value || "Torso"),
               damageAttribute: form.elements.damageAttribute.value,
-              armor: Math.max(0, Number(form.elements.armor.value) || 0),
+              overrideArmor: Boolean(form.elements.overrideArmor.checked),
+              armorOverride: Math.max(0, Number(form.elements.armorOverride.value) || 0),
               applyDamage: Boolean(form.elements.applyDamage.checked),
               damageModifier: Number(form.elements.damageModifier.value) || 0,
               twoHanded: Boolean(form.elements.twoHanded.checked)
@@ -1840,7 +1956,12 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       damageResults = AetherchromeActorSheet.#rollResults(damageRoll);
     }
 
-    const hpDamage = Math.max(0, damageSuccesses - result.armor);
+    const persistentArmor = AetherchromeActorSheet.#armorAtLocation(targetActor, targetLocation.name);
+    const shieldArmor = Math.max(0, Number(defense.shieldArmor ?? 0));
+    const calculatedArmor = persistentArmor.value + shieldArmor;
+    const finalArmor = result.overrideArmor ? result.armorOverride : calculatedArmor;
+    const hpDamage = Math.max(0, damageSuccesses - finalArmor);
+    const injuryAllocation = AetherchromeActorSheet.#injuryAllocation(targetLocation.name, hpDamage);
     const hpBefore = Number(targetActor.system.resources?.health?.value ?? 0);
     let hpAfter = hpBefore;
     let damageApplied = false;
@@ -1853,6 +1974,16 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       } else {
         hpAfter = hpBefore - hpDamage;
         await targetActor.update({"system.resources.health.value": hpAfter});
+        const vitalChecks = await AetherchromeActorSheet.#applyLocationInjuries(
+          targetActor,
+          injuryAllocation,
+          `${this.actor.name}: ${weapon.name}`
+        );
+        for (const vital of vitalChecks) {
+          ui.notifications.warn(
+            `${targetActor.name}: ${vital.location} was Overwhelmed. Resolve Health/Focus vs ${vital.depth}; success applies Stunned 1, failure applies Incapacitated.`
+          );
+        }
         damageApplied = true;
       }
     }
@@ -1873,7 +2004,10 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <span>Damage Attribute</span><strong>${damageThreshold}</strong>
           <span>Dice</span><strong>${damageResults.length ? damageResults.join(", ") : "No roll"}</strong>
           <span>Damage Successes</span><strong>${damageSuccesses}</strong>
-          <span>Final Armor</span><strong>${result.armor}</strong>
+          <span>Persistent Armor</span><strong>${persistentArmor.value} · ${foundry.utils.escapeHTML(persistentArmor.source)}</strong>
+          <span>Shield Block Armor</span><strong>${shieldArmor}</strong>
+          <span>Final Armor</span><strong>${finalArmor}${result.overrideArmor ? " · GM override" : ""}</strong>
+          <span>Injury allocation</span><strong>${injuryAllocation.length ? injuryAllocation.map(entry => `${entry.location} ${entry.amount}${entry.state !== "Root" ? `/${entry.limit} ${entry.state}` : ""}`).join("; ") : "None"}</strong>
           <span>HP Damage</span><strong>${hpDamage}</strong>
           <span>Applied to target</span><strong>${damageApplied ? "Yes" : "No"}</strong>
           <span>Target HP</span><strong>${damageApplied ? `${hpBefore} → ${hpAfter}` : hpBefore}</strong>
@@ -1921,6 +2055,47 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
         `${this.actor.name} gains ${chainedPressure} Pressure from chained combat Tasks (${currentPressure} → ${nextPressure}).`
       );
     }
+  }
+
+  static async #onRollInitiative(event) {
+    event.preventDefault();
+    const baseIntelligence = Math.max(0, Number(this.actor.system.attributes?.intelligence?.base ?? 0));
+    const agility = Math.max(0, Number(this.actor.system.attributes?.agility?.current ?? 0));
+    const fight = Math.max(0, Number(this.actor.system.skillTree?.fight?.rating ?? 0));
+    const pressure = Math.max(0, Number(this.actor.system.resources?.pressure ?? 0));
+    const effectiveSkill = Math.max(0, fight - pressure);
+    const dice = effectiveSkill === 0 ? 1 : effectiveSkill;
+    const threshold = effectiveSkill === 0 ? chanceThreshold(agility) : agility;
+    const roll = await new Roll(`${dice}d10`).evaluate();
+    const successes = AetherchromeActorSheet.#countSuccesses(roll, threshold);
+    const initiative = baseIntelligence + successes;
+    await roll.toMessage({
+      speaker: ChatMessage.getSpeaker({actor: this.actor}),
+      flavor: `${this.actor.name} — Combat Initiative`,
+      content: `<section class="aec-chat-card"><h3>Combat Initiative ${initiative}</h3><p>Base Intelligence ${baseIntelligence} + ${successes} Agility/Fight successes.</p></section>`
+    });
+    const combatant = game.combat?.combatants.find(entry => entry.actorId === this.actor.id);
+    if (combatant) await combatant.update({initiative});
+  }
+
+  static async #onMovementReference(event) {
+    event.preventDefault();
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({actor: this.actor}),
+      content: `<section class="aec-chat-card"><h3>${this.actor.name}: Movement</h3><p>Step 1 hex. Move up to 3 hexes. Sprint 3 + 2 × Agility/Running successes. Withdrawal up to 1 hex and removes Engaged.</p></section>`
+    });
+  }
+
+  static async #onRotateFacingLeft(event) {
+    event.preventDefault();
+    const facing = (Number(this.actor.system.facing ?? 0) + 5) % 6;
+    await this.actor.update({"system.facing": facing});
+  }
+
+  static async #onRotateFacingRight(event) {
+    event.preventDefault();
+    const facing = (Number(this.actor.system.facing ?? 0) + 1) % 6;
+    await this.actor.update({"system.facing": facing});
   }
 
   static async #onApplyEquipmentPackage(event, target) {
