@@ -1221,12 +1221,14 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
     return targets[0];
   }
 
-  static #torsoArmor(actor) {
+  static #armorAtLocation(actor, locationName) {
+    const target = String(locationName ?? "Torso").toLowerCase();
     const armorSources = actor.items
       .filter(item => item.type === "armor" && item.system.worn)
       .filter(item => {
         const coverage = String(item.system.coverage ?? "").toLowerCase();
-        return coverage.includes("torso") || coverage.includes("body") || coverage.includes("all");
+        if (coverage.includes("all") || coverage.includes("full body")) return true;
+        return coverage.split(";").map(part => part.trim()).includes(target);
       })
       .map(item => ({
         name: item.name,
@@ -1517,7 +1519,7 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
       0,
       Number(targetActor.system.attributes?.agility?.current ?? 0)
     );
-    const torsoArmor = AetherchromeActorSheet.#torsoArmor(targetActor);
+    const initialArmor = AetherchromeActorSheet.#armorAtLocation(targetActor, "Torso");
 
     if (!weapon.system.ready) {
       ui.notifications.warn(`${weapon.name} is not Ready.`);
@@ -1607,8 +1609,8 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
           <label><span>Damage Attribute</span>
             <select name="damageAttribute">${AetherchromeActorSheet.#attributeOptions(this, defaultDamageAttribute)}</select>
           </label>
-          <label><span>Armor at targeted Location</span><input name="armor" type="number" value="${torsoArmor.value}" min="0" step="1"></label>
-          <label><span>Armor source</span><input type="text" value="${foundry.utils.escapeHTML(torsoArmor.source)}" readonly></label>
+          <label><span>Armor at targeted Location</span><input name="armor" type="number" value="${initialArmor.value}" min="0" step="1"></label>
+          <label><span>Armor source</span><input name="armorSource" type="text" value="${foundry.utils.escapeHTML(initialArmor.source)}" readonly></label>
           <label class="aec-checkbox-row">
             <input name="applyDamage" type="checkbox" checked>
             <span>Apply resulting HP Damage to the targeted Actor</span>
@@ -1693,6 +1695,15 @@ export class AetherchromeActorSheet extends HandlebarsApplicationMixin(ActorShee
             scrollRegion.style.scrollbarGutter = "stable";
             scrollRegion.style.overscrollBehavior = "contain";
           }
+
+          const targetLocationSelect = attackForm.querySelector("select[name='targetLocation']");
+          const armorInput = attackForm.querySelector("input[name='armor']");
+          const armorSourceInput = attackForm.querySelector("input[name='armorSource']");
+          targetLocationSelect?.addEventListener("change", changeEvent => {
+            const locationArmor = AetherchromeActorSheet.#armorAtLocation(targetActor, changeEvent.target.value);
+            if (armorInput) armorInput.value = locationArmor.value;
+            if (armorSourceInput) armorSourceInput.value = locationArmor.source;
+          });
         }
       }
     });

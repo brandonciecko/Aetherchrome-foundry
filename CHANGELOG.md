@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.22 — 2026-07-31
+
+### Called Shot Armor automation
+
+- Armor at the targeted Location is now looked up automatically from worn Armor Items' Location coverage, generalizing the previous Torso-only lookup.
+- The Attack dialog's Armor and Armor source fields update live when the Targeted Location selector changes.
+- The Armor field remains manually editable to override the automatic lookup.
+
+### Current limitations
+
+- Location Injury allocation and cascading are not yet automated by the Attack workflow.
+- Active Defense remains local-client rather than socket-routed.
+
 ## 0.0.21 — 2026-07-29
 
 ### HP track synchronization
